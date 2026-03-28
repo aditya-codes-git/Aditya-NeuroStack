@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useChecklistStore } from '@/stores/checklistStore'
+import { useVideoSummaryStore } from '@/stores/videoSummaryStore'
 import { useRealtimeTimer, formatDuration, formatDurationShort } from '@/hooks/useRealtimeTimer'
 import { generateSummary, generateTaskSuggestions, generateResumeContext } from '@/lib/gemini'
 import type { ResumeContext } from '@/types/database'
@@ -13,6 +14,7 @@ import {
 export default function RightPanel() {
   const { selectedSession, activeSession, updateNotes, updateLinks, updateResumeContext } = useSessionStore()
   const { items, fetchItems, addItem, toggleItem, deleteItem, clearItems } = useChecklistStore()
+  const { summaries, loading: videoLoading, error: videoError, cooldown: videoCooldown, getSummary, fetchCachedSummary, clearError: clearVideoError } = useVideoSummaryStore()
   const session = selectedSession || activeSession
   const elapsed = useRealtimeTimer(activeSession)
 
@@ -39,6 +41,10 @@ export default function RightPanel() {
         setRcType(session.resume_context.type)
         setRcLink(session.resume_context.link || '')
         setRcPosition(session.resume_context.position)
+        // Auto-fetch cached video summary (DB only, no API call)
+        if (session.resume_context.type === 'video' && session.resume_context.link) {
+          fetchCachedSummary(session.resume_context.link)
+        }
       } else {
         setRcType('manual')
         setRcLink('')
@@ -284,6 +290,56 @@ export default function RightPanel() {
                        'Open link'}
                     </span>
                   </a>
+                )}
+
+                {/* 🎬 Video Summary — Generate / Display */}
+                {rc.type === 'video' && rc.link && (
+                  <div className="mt-2 space-y-2">
+                    {summaries[rc.link] ? (
+                      <div className="rounded-lg bg-primary/5 border border-primary/15 p-3 animate-fade-in">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Sparkles className="w-3 h-3 text-primary" />
+                          <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Video Summary</span>
+                        </div>
+                        <p className="text-xs text-text-primary leading-relaxed whitespace-pre-wrap">
+                          {summaries[rc.link]}
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => getSummary(rc.link!)}
+                          disabled={!!videoLoading || videoCooldown}
+                          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all text-xs font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {videoLoading === rc.link ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Generating summary...
+                            </>
+                          ) : videoCooldown ? (
+                            <>
+                              <Clock className="w-3 h-3" />
+                              Cooldown — try again shortly
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3" />
+                              ✨ Generate Summary
+                            </>
+                          )}
+                        </button>
+                        {videoError && (
+                          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/20 text-warning text-[11px] animate-fade-in">
+                            <span>⚠️ {videoError}</span>
+                            <button onClick={clearVideoError} className="shrink-0 hover:text-text-primary cursor-pointer">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 )}
 
                 <div className="flex gap-2">

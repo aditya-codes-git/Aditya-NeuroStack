@@ -91,6 +91,29 @@ export interface Database {
           created_at?: string
         }
       }
+      video_summaries: {
+        Row: {
+          id: string
+          user_id: string
+          video_url: string
+          summary: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          video_url: string
+          summary: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          video_url?: string
+          summary?: string
+          created_at?: string
+        }
+      }
     }
   }
 }
@@ -101,3 +124,5 @@ export type SessionUpdate = Database['public']['Tables']['sessions']['Update']
 export type ChecklistItem = Database['public']['Tables']['checklist']['Row']
 export type ChecklistInsert = Database['public']['Tables']['checklist']['Insert']
 export type ChecklistUpdate = Database['public']['Tables']['checklist']['Update']
+export type VideoSummary = Database['public']['Tables']['video_summaries']['Row']
+export type VideoSummaryInsert = Database['public']['Tables']['video_summaries']['Insert']

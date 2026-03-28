@@ -172,3 +172,16 @@ Pending tasks: ${pendingTasks.join(', ') || 'None'}${resumePositionPrompt}`
     return result.response.text()
   })
 }
+
+export async function generateVideoSummary(videoUrl: string): Promise<string> {
+  const ai = getGenAI()
+  if (!ai) return '⚠️ AI not configured. Add your Gemini API key to .env'
+
+  return withRetry(async () => {
+    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const result = await model.generateContent(
+      `Summarize this YouTube video in 5-6 concise bullet points focusing on key ideas and takeaways. Be specific and actionable.\n\nVideo URL: ${videoUrl}`
+    )
+    return result.response.text()
+  })
+}

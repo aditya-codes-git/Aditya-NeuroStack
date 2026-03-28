@@ -6,6 +6,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface ResumeContext {
+  type: 'video' | 'document' | 'manual'
+  link?: string
+  position: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -16,6 +22,7 @@ export interface Database {
           title: string
           notes: string | null
           links: string[]
+          resume_context: ResumeContext | null
           status: 'active' | 'paused' | 'completed'
           start_time: string
           end_time: string | null
@@ -32,6 +39,7 @@ export interface Database {
           title: string
           notes?: string | null
           links?: string[]
+          resume_context?: ResumeContext | null
           status?: 'active' | 'paused' | 'completed'
           start_time?: string
           end_time?: string | null
@@ -48,6 +56,7 @@ export interface Database {
           title?: string
           notes?: string | null
           links?: string[]
+          resume_context?: ResumeContext | null
           status?: 'active' | 'paused' | 'completed'
           start_time?: string
           end_time?: string | null

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import type { Session, SessionInsert } from '@/types/database'
+import type { Session, SessionInsert, ResumeContext } from '@/types/database'
 
 interface SessionState {
   sessions: Session[]
@@ -18,7 +18,9 @@ interface SessionState {
   completeSession: (id: string) => Promise<void>
   updateNotes: (id: string, notes: string) => Promise<void>
   updateLinks: (id: string, links: string[]) => Promise<void>
+  updateResumeContext: (id: string, resumeContext: ResumeContext | null) => Promise<void>
   setSelectedSession: (session: Session | null) => void
+  clearError: () => void
   setupRealtime: () => () => void
 }
 
@@ -273,7 +275,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     await supabase.from('sessions').update({ links }).eq('id', id)
   },
 
+  updateResumeContext: async (id: string, resume_context: ResumeContext | null) => {
+    set(state => ({
+      sessions: state.sessions.map(s => s.id === id ? { ...s, resume_context } : s),
+      activeSession: state.activeSession?.id === id ? { ...state.activeSession, resume_context } : state.activeSession,
+      selectedSession: state.selectedSession?.id === id ? { ...state.selectedSession, resume_context } : state.selectedSession,
+    }))
+
+    await supabase.from('sessions').update({ resume_context: resume_context as any }).eq('id', id)
+  },
+
   setSelectedSession: (session) => set({ selectedSession: session }),
+
+  clearError: () => set({ error: null }),
 
   setupRealtime: () => {
     const channel = supabase

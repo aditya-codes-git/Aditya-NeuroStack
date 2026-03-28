@@ -25,7 +25,8 @@ export default function SessionCard({ session }: Props) {
     if (session.status === 'active') {
       await pauseSession(session.id)
     } else if (session.status === 'paused') {
-      await resumeSession(session.id)
+      // Select the session — CenterPanel will show Resume Packet Modal
+      setSelectedSession(session)
     }
   }
 

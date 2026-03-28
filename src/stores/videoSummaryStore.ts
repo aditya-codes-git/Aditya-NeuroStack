@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import { generateVideoSummary } from '@/lib/gemini'
+import { generateVideoSummary } from '@/lib/groq'
 import type { VideoSummaryInsert } from '@/types/database'
 
 interface VideoSummaryState {
@@ -54,7 +54,7 @@ export const useVideoSummaryStore = create<VideoSummaryState>((set, get) => ({
     const cached = await get().fetchCachedSummary(videoUrl)
     if (cached) return
 
-    // Generate via Gemini
+    // Generate via Groq
     set({ loading: videoUrl, error: null })
 
     try {

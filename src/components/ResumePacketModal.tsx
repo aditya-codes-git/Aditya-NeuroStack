@@ -3,7 +3,7 @@ import { useSessionStore } from '@/stores/sessionStore'
 import { useChecklistStore } from '@/stores/checklistStore'
 import { useVideoSummaryStore } from '@/stores/videoSummaryStore'
 import { formatDurationShort } from '@/hooks/useRealtimeTimer'
-import { generateResumePacketBrief } from '@/lib/gemini'
+import { generateResumePacketBrief } from '@/lib/groq'
 import type { Session } from '@/types/database'
 import {
   Brain, MapPin, CheckSquare, Link2, Clock, ExternalLink,

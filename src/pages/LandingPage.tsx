@@ -1,13 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Brain, Clock, Focus, Play, FileText, CheckCircle2, Bookmark, Pause, PlayCircle } from 'lucide-react';
 import { HalideLandingHero } from '@/components/ui/halide-topo-hero';
+import { FloatingHeader } from '@/components/ui/floating-header';
 import { Footer } from '@/components/ui/footer-section';
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-bg-primary text-text-primary overflow-x-hidden">
+    <div className="min-h-screen bg-bg-primary text-text-primary overflow-x-hidden relative">
+      {/* 0. Navigation */}
+      <div className="fixed top-0 left-0 right-0 z-[100] p-4 pointer-events-none">
+        <div className="pointer-events-auto">
+          <FloatingHeader />
+        </div>
+      </div>
+
       {/* 1. Hero Section */}
       <HalideLandingHero />
 

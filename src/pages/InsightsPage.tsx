@@ -10,6 +10,8 @@ import {
   ArrowLeft, Clock, CheckCircle, Zap, TrendingUp,
   Activity, Target, BarChart3, Brain
 } from 'lucide-react'
+import { ProductivityGraph } from '@/components/ui/line-graph-statistics'
+import { Footer } from '@/components/ui/footer-section'
 
 interface SessionWithTasks {
   id: string
@@ -270,84 +272,8 @@ export default function InsightsPage({ onBack }: Props) {
         </div>
 
         {/* ━━━ MIDDLE: CHARTS ━━━ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Progress Line Chart */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2 mb-4">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Progress Over Sessions
-            </h3>
-            {progressChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={progressChartData}>
-                  <defs>
-                    <linearGradient id="progressGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6c63ff" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#6c63ff" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222240" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#8585a0', fontSize: 10 }}
-                    axisLine={{ stroke: '#222240' }}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tick={{ fill: '#8585a0', fontSize: 10 }}
-                    axisLine={{ stroke: '#222240' }}
-                    tickFormatter={(v) => `${v}%`}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="progress"
-                    stroke="#6c63ff"
-                    strokeWidth={2.5}
-                    fill="url(#progressGrad)"
-                    dot={{ fill: '#6c63ff', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: '#6c63ff', stroke: '#fff', strokeWidth: 2 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[240px] flex items-center justify-center text-text-muted text-sm">
-                Add tasks to sessions to see progress
-              </div>
-            )}
-          </div>
-
-          {/* Task Completion Bar Chart */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2 mb-4">
-              <CheckCircle className="w-4 h-4 text-accent" />
-              Task Completion Trend
-            </h3>
-            {barChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={barChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222240" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#8585a0', fontSize: 10 }}
-                    axisLine={{ stroke: '#222240' }}
-                  />
-                  <YAxis
-                    tick={{ fill: '#8585a0', fontSize: 10 }}
-                    axisLine={{ stroke: '#222240' }}
-                    allowDecimals={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="total" fill="#3a3a5a" radius={[4, 4, 0, 0]} name="total" />
-                  <Bar dataKey="completed" fill="#00d4aa" radius={[4, 4, 0, 0]} name="completed" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[240px] flex items-center justify-center text-text-muted text-sm">
-                No task data available yet
-              </div>
-            )}
-          </div>
+        <div className="mb-8">
+          <ProductivityGraph sessions={sessionData} />
         </div>
 
         {/* ━━━ BOTTOM: ADDITIONAL INSIGHTS ━━━ */}
@@ -423,6 +349,8 @@ export default function InsightsPage({ onBack }: Props) {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }

@@ -1,23 +1,64 @@
 @import "tailwindcss";
 
+:root {
+  /* Dark Mode Palette (Default) */
+  --bg-primary: #000000;
+  --bg-surface: #0a0a0f;
+  --bg-elevated: #12121e;
+  --bg-hover: #1a1a2e;
+  --primary: #6c63ff;
+  --primary-light: #8b83ff;
+  --primary-glow: rgba(108, 99, 255, 0.2);
+  --accent: #00d4aa;
+  --accent-glow: rgba(0, 212, 170, 0.2);
+  --warning: #ff6b6b;
+  --warning-glow: rgba(255, 107, 107, 0.2);
+  --amber: #f59e0b;
+  --text-primary: #f2f2f7;
+  --text-secondary: #9898ad;
+  --text-muted: #63637e;
+  --border: #1a1a2e;
+  --border-light: #2a2a3e;
+}
+
+.light {
+  /* Light Mode Palette */
+  --bg-primary: #ffffff;
+  --bg-surface: #f9f9fb;
+  --bg-elevated: #f0f0f5;
+  --bg-hover: #e5e5f0;
+  --primary: #5c54e6;
+  --primary-light: #7b73ff;
+  --primary-glow: rgba(92, 84, 230, 0.1);
+  --accent: #00b38f;
+  --accent-glow: rgba(0, 179, 143, 0.1);
+  --warning: #ef4444;
+  --warning-glow: rgba(239, 68, 68, 0.1);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-light: #cbd5e1;
+}
+
 @theme {
-  --color-bg-primary: #0a0a0f;
-  --color-bg-surface: #12121a;
-  --color-bg-elevated: #1a1a2e;
-  --color-bg-hover: #222240;
-  --color-primary: #6c63ff;
-  --color-primary-light: #8b83ff;
-  --color-primary-glow: rgba(108, 99, 255, 0.2);
-  --color-accent: #00d4aa;
-  --color-accent-glow: rgba(0, 212, 170, 0.2);
-  --color-warning: #ff6b6b;
-  --color-warning-glow: rgba(255, 107, 107, 0.2);
-  --color-amber: #f59e0b;
-  --color-text-primary: #e8e8f0;
-  --color-text-secondary: #8888a0;
-  --color-text-muted: #555570;
-  --color-border: #2a2a3e;
-  --color-border-light: #3a3a55;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-hover: var(--bg-hover);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-glow: var(--primary-glow);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
+  --color-warning: var(--warning);
+  --color-warning-glow: var(--warning-glow);
+  --color-amber: var(--amber);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -35,9 +76,10 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -52,11 +94,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--border);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+  background: var(--border-light);
 }
 
 /* === ANIMATIONS === */
@@ -71,8 +113,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px var(--color-primary-glow); }
-  50% { box-shadow: 0 0 40px var(--color-primary-glow), 0 0 60px rgba(108, 99, 255, 0.1); }
+  0%, 100% { box-shadow: 0 0 20px var(--primary-glow); }
+  50% { box-shadow: 0 0 40px var(--primary-glow), 0 0 60px rgba(108, 99, 255, 0.1); }
 }
 
 @keyframes timer-pulse {
@@ -108,36 +150,36 @@ body {
 
 /* === GLASS MORPHISM === */
 .glass {
-  background: rgba(18, 18, 26, 0.7);
+  background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
 }
 
 .glass-elevated {
-  background: rgba(26, 26, 46, 0.8);
+  background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border);
 }
 
 /* === STATUS BADGES === */
 .status-active {
-  background: rgba(0, 212, 170, 0.15);
-  color: var(--color-accent);
-  border: 1px solid rgba(0, 212, 170, 0.3);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .status-paused {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--color-amber);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: color-mix(in srgb, var(--amber) 15%, transparent);
+  color: var(--amber);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
 }
 
 .status-completed {
-  background: rgba(108, 99, 255, 0.15);
-  color: var(--color-primary-light);
-  border: 1px solid rgba(108, 99, 255, 0.3);
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary-light);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 /* === GRADIENT BORDER === */
@@ -150,7 +192,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -173,7 +215,7 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 20% 50%, rgba(108, 99, 255, 0.03), transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(0, 212, 170, 0.03), transparent 50%),
-              radial-gradient(circle at 50% 80%, rgba(255, 107, 107, 0.02), transparent 50%);
+  background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--primary) 3%, transparent), transparent 50%),
+              radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--accent) 3%, transparent), transparent 50%),
+              radial-gradient(circle at 50% 80%, color-mix(in srgb, var(--warning) 2%, transparent), transparent 50%);
 }

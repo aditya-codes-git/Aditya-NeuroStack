@@ -1,8 +1,21 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
+import { useThemeStore } from '@/stores/themeStore'
 import AuthPage from '@/pages/AuthPage'
 import Dashboard from '@/pages/Dashboard'
+
+function ThemeManager() {
+  const { theme } = useThemeStore()
+  
+  useEffect(() => {
+    const root = window.document.documentElement
+    root.classList.remove('light', 'dark')
+    root.classList.add(theme)
+  }, [theme])
+
+  return null
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore()
@@ -10,6 +23,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+        <ThemeManager />
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-text-secondary text-sm">Loading...</p>
@@ -19,7 +33,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/auth" replace />
-  return <>{children}</>
+  return (
+    <>
+      <ThemeManager />
+      {children}
+    </>
+  )
 }
 
 export default function App() {
@@ -32,6 +51,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+        <ThemeManager />
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-text-secondary text-sm font-medium tracking-wide">ContextSwitch</p>
@@ -42,6 +62,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ThemeManager />
       <Routes>
         <Route
           path="/auth"

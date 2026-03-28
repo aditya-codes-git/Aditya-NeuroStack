@@ -1,7 +1,8 @@
 import { useAuthStore } from '@/stores/authStore'
 import { useSessionStore } from '@/stores/sessionStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { useRealtimeTimer, formatDuration } from '@/hooks/useRealtimeTimer'
-import { Zap, Timer, LogOut, User, BarChart3 } from 'lucide-react'
+import { Zap, Timer, LogOut, User, BarChart3, Sun, Moon } from 'lucide-react'
 
 interface Props {
   onInsightsClick?: () => void
@@ -10,11 +11,12 @@ interface Props {
 
 export default function Header({ onInsightsClick, showingInsights }: Props) {
   const { user, signOut } = useAuthStore()
+  const { theme, toggleTheme } = useThemeStore()
   const { activeSession } = useSessionStore()
   const elapsed = useRealtimeTimer(activeSession)
 
   return (
-    <header className="h-16 border-b border-border bg-bg-surface/80 backdrop-blur-xl flex items-center justify-between px-6 relative z-20">
+    <header className="h-16 border-b border-white/5 bg-bg-primary/40 backdrop-blur-2xl shadow-sm shadow-black/10 flex items-center justify-between px-6 relative z-50 transition-all duration-300">
       {/* Logo */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -40,7 +42,20 @@ export default function Header({ onInsightsClick, showingInsights }: Props) {
       )}
 
       {/* Nav + User Menu */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg bg-bg-elevated border border-border text-text-secondary hover:text-primary hover:border-primary/30 transition-all cursor-pointer group"
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          {theme === 'light' ? (
+            <Moon className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          ) : (
+            <Sun className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
+          )}
+        </button>
+
         {/* Insights Button */}
         <button
           onClick={onInsightsClick}

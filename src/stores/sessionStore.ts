@@ -16,6 +16,7 @@ interface SessionState {
   pauseSession: (id: string) => Promise<void>
   resumeSession: (id: string) => Promise<boolean>
   completeSession: (id: string) => Promise<void>
+  deleteSession: (id: string) => Promise<void>
   updateNotes: (id: string, notes: string) => Promise<void>
   updateLinks: (id: string, links: string[]) => Promise<void>
   updateResumeContext: (id: string, resumeContext: ResumeContext | null) => Promise<void>
@@ -255,6 +256,24 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }))
   },
 
+  deleteSession: async (id: string) => {
+    const { error } = await (supabase
+      .from('sessions') as any)
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      set({ error: error.message })
+      return
+    }
+
+    set(state => ({
+      sessions: state.sessions.filter(s => s.id !== id),
+      activeSession: state.activeSession?.id === id ? null : state.activeSession,
+      selectedSession: state.selectedSession?.id === id ? null : state.selectedSession,
+    }))
+  },
+
   updateNotes: async (id: string, notes: string) => {
     set(state => ({
       sessions: state.sessions.map(s => s.id === id ? { ...s, notes } : s),
@@ -298,10 +317,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         (payload) => {
           const newRecord = payload.new as Session
           if (payload.eventType === 'INSERT') {
-            set(state => ({
-              sessions: [newRecord, ...state.sessions],
-              activeSession: newRecord.status === 'active' ? newRecord : state.activeSession,
-            }))
+            set(state => {
+              if (state.sessions.some(s => s.id === newRecord.id)) return state
+              return {
+                sessions: [newRecord, ...state.sessions],
+                activeSession: newRecord.status === 'active' ? newRecord : state.activeSession,
+              }
+            })
           } else if (payload.eventType === 'UPDATE') {
             set(state => ({
               sessions: state.sessions.map(s => s.id === newRecord.id ? newRecord : s),

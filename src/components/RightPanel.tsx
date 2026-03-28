@@ -461,7 +461,7 @@ export default function RightPanel() {
                     <span className="text-xs text-text-primary flex-1">{item.text}</span>
                     <button
                       onClick={() => deleteItem(item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-text-muted hover:text-warning cursor-pointer transition-all"
+                      className="p-1 text-text-muted hover:text-warning cursor-pointer transition-all"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>
@@ -486,7 +486,7 @@ export default function RightPanel() {
                     <span className="text-xs text-text-muted line-through flex-1">{item.text}</span>
                     <button
                       onClick={() => deleteItem(item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-text-muted hover:text-warning cursor-pointer transition-all"
+                      className="p-1 text-text-muted hover:text-warning cursor-pointer transition-all"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>

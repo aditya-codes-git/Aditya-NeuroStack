@@ -67,6 +67,7 @@ export interface Database {
           total_duration?: number
           created_at?: string
         }
+        Relationships: any[]
       }
       checklist: {
         Row: {
@@ -90,6 +91,7 @@ export interface Database {
           completed?: boolean
           created_at?: string
         }
+        Relationships: any[]
       }
       video_summaries: {
         Row: {
@@ -113,7 +115,20 @@ export interface Database {
           summary?: string
           created_at?: string
         }
+        Relationships: any[]
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

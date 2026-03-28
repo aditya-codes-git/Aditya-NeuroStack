@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useChecklistStore } from '@/stores/checklistStore'
 import { useVideoSummaryStore } from '@/stores/videoSummaryStore'
@@ -10,6 +11,7 @@ import {
   Plus, X, Trash2, Sparkles, Loader2, ChevronDown, ChevronUp,
   Play, Timer, Activity
 } from 'lucide-react'
+import { BrandBadge, SectionTitle } from '@/components/ui/sidebar-component'
 
 export default function RightPanel() {
   const { selectedSession, activeSession, updateNotes, updateLinks } = useSessionStore()
@@ -104,15 +106,15 @@ export default function RightPanel() {
 
   if (!session) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6 bg-bg-primary">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center mx-auto mb-4">
-            <Brain className="w-7 h-7 text-text-muted" />
+      <aside className="bg-white/5 backdrop-blur-3xl border-l border-white/5 flex flex-col w-[340px] min-w-[340px] transition-all duration-500 z-10 hide-scrollbar h-full items-center justify-center p-6">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
+            <Brain className="w-7 h-7 text-neutral-500" />
           </div>
-          <p className="text-text-secondary text-sm font-medium">Session Details</p>
-          <p className="text-text-muted text-xs mt-1">Select a session to view details</p>
-        </div>
-      </div>
+          <p className="text-neutral-300 text-sm font-medium">Session Details</p>
+          <p className="text-neutral-500 text-xs mt-1">Select a session to view details</p>
+        </motion.div>
+      </aside>
     )
   }
 
@@ -133,297 +135,253 @@ export default function RightPanel() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-bg-primary">
+    <aside className="bg-white/5 backdrop-blur-3xl border-l border-white/5 flex flex-col w-[340px] min-w-[340px] transition-all duration-500 z-10 hide-scrollbar h-full">
       {/* Panel Header */}
-      <div className="p-4 border-b border-border bg-bg-primary">
-        <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-          {isActive ? <Activity className="w-4 h-4 text-accent" /> : <Brain className="w-4 h-4 text-primary" />}
-          Session Details
-        </h2>
-        <p className="text-xs text-text-secondary mt-1 truncate">{session.title}</p>
+      <div className="p-5 border-b border-white/5">
+        <SectionTitle 
+          title="Session Details" 
+          isCollapsed={false} 
+          onToggleCollapse={() => {}}
+          rightElement={isActive ? <Activity className="w-4 h-4 text-accent" /> : <Brain className="w-4 h-4 text-primary" />}
+        />
+        <p className="text-[13px] text-neutral-400 mt-1 truncate font-medium">{session.title}</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-
-        {/* ━━━━━ 🧠 WHAT — Context Summary ━━━━━ */}
-        <div className="rounded-xl bg-bg-elevated border border-border overflow-hidden">
-          <div className="px-3.5 py-2.5 border-b border-border bg-primary/5">
-            <h3 className="text-xs font-semibold text-primary flex items-center gap-1.5">
-              <Brain className="w-3.5 h-3.5" />
-              You are working on:
-            </h3>
-          </div>
-          <div className="p-3.5">
-            {/* Editable Notes */}
-            <textarea
-              id="session-notes-editor"
-              value={session.notes || ''}
-              onChange={(e) => handleNotesChange(e.target.value)}
-              placeholder="Add notes about your progress..."
-              rows={4}
-              className="w-full bg-bg-primary border border-border rounded-lg py-2 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all resize-none leading-relaxed"
-            />
-            <div className="flex items-center mt-1">
-              <span className="text-[10px] text-text-muted">Auto-saves every 2s</span>
+      <div className="flex-1 overflow-y-auto p-4 space-y-5 hide-scrollbar relative">
+        <AnimatePresence>
+          {/* ━━━━━ 🧠 WHAT — Context Summary ━━━━━ */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden backdrop-blur-md">
+            <div className="px-4 py-3 border-b border-white/10 bg-white/5">
+              <h3 className="text-xs font-semibold text-primary flex items-center gap-2 uppercase tracking-wider">
+                <Brain className="w-3.5 h-3.5" /> Context Notes
+              </h3>
             </div>
-          </div>
-        </div>
+            <div className="p-3">
+              <textarea
+                id="session-notes-editor"
+                value={session.notes || ''}
+                onChange={(e) => handleNotesChange(e.target.value)}
+                placeholder="Jot down quick thoughts..."
+                rows={4}
+                className="w-full bg-transparent border-0 border-b border-transparent py-2 px-2 text-[13px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-primary/50 focus:bg-white/[0.03] transition-all resize-none leading-relaxed rounded-md"
+              />
+            </div>
+          </motion.div>
 
-        {/* ━━━━━ ✅ NEXT — Pending Tasks ━━━━━ */}
-        <div className="rounded-xl bg-bg-elevated border border-border overflow-hidden">
-          <div className="px-3.5 py-2.5 border-b border-border bg-amber/5">
-            <h3 className="text-xs font-semibold text-amber flex items-center gap-1.5">
-              <CheckSquare className="w-3.5 h-3.5" />
-              Checklist
+          {/* ━━━━━ ✅ NEXT — Pending Tasks ━━━━━ */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden backdrop-blur-md">
+            <div className="px-4 py-3 border-b border-white/10 bg-white/5 flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-amber flex items-center gap-2 uppercase tracking-wider">
+                <CheckSquare className="w-3.5 h-3.5" /> Tasks
+              </h3>
               {items.length > 0 && (
-                <span className="ml-auto text-[10px] font-normal text-text-muted">
-                  {pendingItems.length}/{items.length} pending
+                <span className="text-[10px] font-medium text-amber/60">
+                  {pendingItems.length} left
                 </span>
               )}
-            </h3>
-          </div>
-          <div className="p-3.5">
-            {/* Pending items (highlighted) */}
-            {pendingItems.length > 0 && (
-              <div className="space-y-1 mb-2">
-                {pendingItems.map(item => (
-                  <div
-                    key={item.id}
-                    className="group flex items-center gap-2 p-1.5 rounded-lg hover:bg-bg-hover transition-all border-l-2 border-amber/40"
-                  >
-                    <button
-                      onClick={() => toggleItem(item.id, true)}
-                      className="w-3.5 h-3.5 rounded border border-amber/40 hover:border-accent flex items-center justify-center shrink-0 transition-all cursor-pointer"
-                    />
-                    <span className="text-xs text-text-primary flex-1">{item.text}</span>
-                    <button
-                      onClick={() => deleteItem(item.id)}
-                      className="p-1 text-text-muted hover:text-warning cursor-pointer transition-all"
-                    >
-                      <Trash2 className="w-2.5 h-2.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Completed items (faded) */}
-            {completedCount > 0 && (
-              <div className="space-y-1 mb-2 opacity-50">
-                {items.filter(i => i.completed).map(item => (
-                  <div key={item.id} className="group flex items-center gap-2 p-1.5 rounded-lg">
-                    <button
-                      onClick={() => toggleItem(item.id, false)}
-                      className="w-3.5 h-3.5 rounded bg-accent border-accent flex items-center justify-center shrink-0 cursor-pointer"
-                    >
-                      <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                    <span className="text-xs text-text-muted line-through flex-1">{item.text}</span>
-                    <button
-                      onClick={() => deleteItem(item.id)}
-                      className="p-1 text-text-muted hover:text-warning cursor-pointer transition-all"
-                    >
-                      <Trash2 className="w-2.5 h-2.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {items.length === 0 && (
-              <p className="text-xs text-text-muted italic mb-2">No tasks yet</p>
-            )}
-
-            {/* Add task */}
-            <div className="flex gap-1.5 mt-2">
-              <input
-                id="new-task-input"
-                type="text"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-                placeholder="Add a task..."
-                className="flex-1 bg-bg-primary border border-border rounded-lg py-1.5 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all"
-              />
-              <button
-                onClick={handleAddTask}
-                className="p-1.5 rounded-lg bg-amber/10 text-amber hover:bg-amber/20 transition-all cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
             </div>
-          </div>
-        </div>
+            <div className="p-3">
+              {pendingItems.length > 0 && (
+                <div className="space-y-1 mb-3">
+                  {pendingItems.map(item => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      key={item.id}
+                      className="group flex flex-start gap-2.5 p-2 rounded-xl hover:bg-white/5 transition-all border-l-2 border-transparent hover:border-amber/40"
+                    >
+                      <button
+                        onClick={() => toggleItem(item.id, true)}
+                        className="w-4 h-4 mt-0.5 rounded-md border border-amber/40 hover:border-accent hover:bg-accent/10 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                      />
+                      <span className="text-[13px] text-white flex-1 leading-tight">{item.text}</span>
+                      <button
+                        onClick={() => deleteItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-neutral-500 hover:text-warning hover:bg-warning/10 cursor-pointer transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
-        {/* ━━━━━ 🔗 Resources ━━━━━ */}
-        <div className="rounded-xl bg-bg-elevated border border-border overflow-hidden">
-          <div className="px-3.5 py-2.5 border-b border-border">
-            <h3 className="text-xs font-semibold text-text-secondary flex items-center gap-1.5">
-              <Link2 className="w-3.5 h-3.5 text-primary" />
-              Resources
+              {completedCount > 0 && (
+                <div className="space-y-1 mb-3">
+                  {items.filter(i => i.completed).map(item => (
+                    <motion.div layout key={item.id} className="group flex flex-start gap-2.5 p-2 rounded-xl opacity-40 hover:opacity-100 transition-all">
+                      <button
+                        onClick={() => toggleItem(item.id, false)}
+                        className="w-4 h-4 mt-0.5 rounded-md bg-white/20 border-transparent flex items-center justify-center shrink-0 cursor-pointer hover:bg-white/30"
+                      >
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                      <span className="text-[13px] text-white flex-1 leading-tight">{item.text}</span>
+                      <button
+                        onClick={() => deleteItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-neutral-500 hover:text-warning hover:bg-warning/10 cursor-pointer transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {items.length === 0 && (
+                <div className="text-center py-4 mb-2">
+                  <p className="text-[11px] text-neutral-500 uppercase tracking-widest">No tasks yet</p>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <input
+                  id="new-task-input"
+                  type="text"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+                  placeholder="Type a task & press Enter"
+                  className="flex-1 bg-transparent border-0 border-b border-white/10 rounded-none py-2 px-1 text-[13px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-amber/50 focus:bg-white/[0.03] transition-all"
+                />
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleAddTask}
+                  className="p-2 rounded-xl bg-white/5 text-amber hover:bg-white/10 transition-all cursor-pointer border border-transparent hover:border-white/10 mt-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ━━━━━ 🔗 Resources ━━━━━ */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden backdrop-blur-md">
+            <div className="px-4 py-3 border-b border-white/10 bg-white/5 flex justify-between items-center">
+              <h3 className="text-xs font-semibold text-primary flex items-center gap-2 uppercase tracking-wider">
+                <Link2 className="w-3.5 h-3.5" /> Resources
+              </h3>
               {session.links && session.links.length > 0 && (
-                <span className="ml-auto text-[10px] text-text-muted">{session.links.length}</span>
+                <span className="text-[10px] text-primary/60 font-medium">{session.links.length} saved</span>
               )}
-            </h3>
-          </div>
-          <div className="p-3.5">
-            {session.links && session.links.length > 0 ? (
-              <div className="space-y-1 mb-2">
-                {session.links.map((link) => (
-                  <div key={link} className="group flex items-center gap-2 p-1.5 rounded-lg hover:bg-bg-hover transition-all">
-                    <ExternalLink className="w-3 h-3 text-primary shrink-0" />
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:text-primary-light truncate flex-1"
-                    >
-                      {(() => { try { return new URL(link).hostname } catch { return link } })()}
-                    </a>
-                    <button
-                      onClick={() => handleRemoveLink(link)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-text-muted hover:text-warning transition-all cursor-pointer"
-                    >
-                      <X className="w-2.5 h-2.5" />
-                    </button>
+            </div>
+            <div className="p-3">
+              {session.links && session.links.length > 0 ? (
+                <div className="space-y-1 mb-3">
+                  {session.links.map((link) => (
+                    <div key={link} className="group flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-all outline outline-1 outline-transparent hover:outline-white/10">
+                      <ExternalLink className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[13px] text-white hover:text-primary transition-colors truncate flex-1"
+                      >
+                        {(() => { try { return new URL(link).hostname } catch { return link } })()}
+                      </a>
+                      <button
+                        onClick={() => handleRemoveLink(link)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-neutral-500 hover:text-warning hover:bg-warning/10 cursor-pointer transition-all"
+                      >
+                        <X className="w-3h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 mb-2">
+                  <p className="text-[11px] text-neutral-500 uppercase tracking-widest">No links yet</p>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <input
+                  id="new-link-input"
+                  type="url"
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddLink()}
+                  placeholder="Paste URL..."
+                  className="flex-1 bg-transparent border-0 border-b border-white/10 rounded-none py-2 px-1 text-[13px] text-white placeholder:text-neutral-500 focus:outline-none focus:border-primary/50 focus:bg-white/[0.03] transition-all"
+                />
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleAddLink}
+                  className="p-2 rounded-xl bg-white/5 text-primary hover:bg-white/10 transition-all cursor-pointer border border-transparent hover:border-white/10 mt-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ━━━━━ ✨ AI Assistant ━━━━━ */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl border border-accent/20 overflow-hidden bg-accent/5 backdrop-blur-md">
+            <button
+              onClick={() => setShowAi(!showAi)}
+              className="w-full flex items-center justify-between px-4 py-3 text-[11px] font-bold text-accent uppercase tracking-wider hover:bg-accent/10 transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5" /> AI Assistant
+              </span>
+              {showAi ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+
+            <AnimatePresence>
+              {showAi && (
+                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+                  <div className="p-3 border-t border-accent/10 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAiSummary}
+                        disabled={aiLoading}
+                        className="col-span-1 text-[11px] py-2 rounded-xl bg-white/5 text-white hover:bg-white/10 transition-all cursor-pointer disabled:opacity-50 border border-white/10 font-medium flex items-center justify-center gap-1.5"
+                      >
+                        📝 Summarize
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAiTasks}
+                        disabled={aiLoading}
+                        className="col-span-1 text-[11px] py-2 rounded-xl bg-white/5 text-white hover:bg-white/10 transition-all cursor-pointer disabled:opacity-50 border border-white/10 font-medium flex items-center justify-center gap-1.5"
+                      >
+                        ✅ Suggest Tasks
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAiResume}
+                        disabled={aiLoading}
+                        className="col-span-2 text-[11px] py-2 rounded-xl bg-accent text-white hover:bg-accent/90 transition-all cursor-pointer disabled:opacity-50 shadow-[0_0_15px_rgba(59,130,246,0.3)] font-medium flex items-center justify-center gap-1.5"
+                      >
+                        🧠 Generate Resume Brief
+                      </motion.button>
+                    </div>
+
+                    {aiLoading && (
+                      <div className="flex items-center justify-center gap-2 text-[11px] text-accent py-2 font-medium">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Generating Insights...
+                      </div>
+                    )}
+
+                    {aiResult && !aiLoading && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-black/20 border border-white/10 rounded-xl p-3 text-[12px] text-neutral-300 leading-relaxed whitespace-pre-wrap shadow-inner">
+                        {aiResult}
+                      </motion.div>
+                    )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-text-muted italic mb-2">No links yet</p>
-            )}
-
-            <div className="flex gap-1.5">
-              <input
-                id="new-link-input"
-                type="url"
-                value={newLink}
-                onChange={(e) => setNewLink(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddLink()}
-                placeholder="Add a link..."
-                className="flex-1 bg-bg-primary border border-border rounded-lg py-1.5 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all"
-              />
-              <button
-                onClick={handleAddLink}
-                className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ━━━━━ 🕒 Activity & Timer ━━━━━ */}
-        <div className="rounded-xl bg-bg-elevated border border-border overflow-hidden">
-          <div className="px-3.5 py-2.5 border-b border-border">
-            <h3 className="text-xs font-semibold text-text-secondary flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-primary" />
-              Activity
-            </h3>
-          </div>
-          <div className="p-3.5">
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Timer */}
-              <div className="col-span-2 flex items-center gap-3 p-2.5 rounded-lg bg-bg-primary border border-border">
-                <Timer className={`w-5 h-5 ${isActive ? 'text-accent' : 'text-text-muted'}`} />
-                <div>
-                  <span className="text-[10px] text-text-muted block">Total Time</span>
-                  <span className={`font-mono text-lg font-bold ${isActive ? 'text-accent' : 'text-text-primary'}`}>
-                    {formatDuration(displayTime)}
-                  </span>
-                </div>
-                {isActive && <div className="w-2 h-2 rounded-full bg-accent animate-pulse ml-auto" />}
-              </div>
-
-              {/* Last resumed */}
-              {session.last_resume_time && (
-                <div className="p-2 rounded-lg bg-bg-primary border border-border">
-                  <span className="text-[10px] text-text-muted block">Last Resumed</span>
-                  <span className="text-xs text-text-primary font-medium">
-                    {relativeTime(session.last_resume_time)}
-                  </span>
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
+          </motion.div>
 
-              {/* Last paused */}
-              {session.last_paused_at && (
-                <div className="p-2 rounded-lg bg-bg-primary border border-border">
-                  <span className="text-[10px] text-text-muted block">Last Paused</span>
-                  <span className="text-xs text-text-primary font-medium">
-                    {relativeTime(session.last_paused_at)}
-                  </span>
-                </div>
-              )}
-
-              {/* Started */}
-              <div className={`p-2 rounded-lg bg-bg-primary border border-border ${!session.last_paused_at && !session.last_resume_time ? 'col-span-2' : ''}`}>
-                <span className="text-[10px] text-text-muted block">Started</span>
-                <span className="text-xs text-text-primary font-medium">
-                  {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ━━━━━ ✨ AI Assistant ━━━━━ */}
-        <div className="rounded-xl border border-border overflow-hidden">
-          <button
-            onClick={() => setShowAi(!showAi)}
-            className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors cursor-pointer bg-bg-elevated"
-          >
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              AI Assistant
-            </span>
-            {showAi ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-
-          {showAi && (
-            <div className="p-3.5 space-y-2.5 bg-bg-elevated border-t border-border animate-fade-in">
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={handleAiSummary}
-                  disabled={aiLoading}
-                  className="text-[10px] px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer disabled:opacity-50 border border-primary/20 font-medium"
-                >
-                  📝 Summarize
-                </button>
-                <button
-                  onClick={handleAiTasks}
-                  disabled={aiLoading}
-                  className="text-[10px] px-2.5 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-all cursor-pointer disabled:opacity-50 border border-accent/20 font-medium"
-                >
-                  ✅ Suggest Tasks
-                </button>
-                <button
-                  onClick={handleAiResume}
-                  disabled={aiLoading}
-                  className="text-[10px] px-2.5 py-1.5 rounded-lg bg-amber/10 text-amber hover:bg-amber/20 transition-all cursor-pointer disabled:opacity-50 border border-amber/20 font-medium"
-                >
-                  🧠 Resume Brief
-                </button>
-              </div>
-
-              {aiLoading && (
-                <div className="flex items-center gap-2 text-xs text-text-secondary py-1">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Generating...
-                </div>
-              )}
-
-              {aiResult && !aiLoading && (
-                <div className="bg-bg-primary border border-border rounded-lg p-2.5 text-xs text-text-primary leading-relaxed whitespace-pre-wrap">
-                  {aiResult}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
+        </AnimatePresence>
       </div>
-    </div>
+    </aside>
   )
 }

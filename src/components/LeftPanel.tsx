@@ -1,13 +1,17 @@
 import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '@/stores/sessionStore'
+import { useThemeStore } from '@/stores/themeStore'
 import SessionCard from './SessionCard'
 import CreateSessionModal from './CreateSessionModal'
 import { Plus, Search, Calendar, Archive, Clock, Activity, Timer } from 'lucide-react'
+import { BrandBadge, SearchContainer, SectionTitle } from '@/components/ui/sidebar-component'
 
 type View = 'today' | 'archive' | 'timeline'
 
 export default function LeftPanel() {
   const { sessions, activeSession, error } = useSessionStore()
+  const { theme, toggleTheme } = useThemeStore() // For theme switching from Left Panel
   const [view, setView] = useState<View>('today')
   const [showCreate, setShowCreate] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -78,73 +82,65 @@ export default function LeftPanel() {
   }
 
   return (
-    <>
-      {/* Panel Header */}
-      <div className="p-4 border-b border-border space-y-3">
+    <aside className="bg-white/5 backdrop-blur-3xl border-r border-white/5 flex flex-col w-[340px] min-w-[340px] transition-all duration-500 z-10 hide-scrollbar h-full">
+      <div className="p-4 flex flex-col gap-4">
+        {/* BrandBadge area */}
+        <BrandBadge />
+
+        {/* Panel Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            Sessions
-          </h2>
-          <button
-            id="create-session-btn"
-            onClick={() => setShowCreate(true)}
-            className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all cursor-pointer"
-            title="New Session"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+          <SectionTitle 
+            title="Sessions" 
+            isCollapsed={false} 
+            onToggleCollapse={() => {}}
+            rightElement={
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowCreate(true)}
+                className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer"
+                title="New Session"
+              >
+                <Plus className="w-4 h-4" />
+              </motion.button>
+            }
+          />
         </div>
 
-        {/* View Toggle — 3 tabs */}
-        <div className="flex rounded-lg bg-bg-elevated p-0.5 border border-border">
-          <button
-            onClick={() => setView('today')}
-            className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
-              view === 'today' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Calendar className="w-3 h-3" />
-            Today
-          </button>
-          <button
-            onClick={() => setView('timeline')}
-            className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
-              view === 'timeline' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Timer className="w-3 h-3" />
-            Timeline
-          </button>
-          <button
-            onClick={() => setView('archive')}
-            className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
-              view === 'archive' ? 'bg-primary text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Archive className="w-3 h-3" />
-            Archive
-          </button>
-        </div>
+        {/* Search */}
+        <SearchContainer value={searchQuery} onChange={setSearchQuery} />
 
-        {/* Search & Filter */}
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
-            <input
-              id="session-search"
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-bg-elevated border border-border rounded-lg py-1.5 pl-8 pr-3 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all"
-            />
+        {/* Filters */}
+        <div className="flex gap-2 w-full">
+          <div className="flex rounded-lg bg-white/5 p-0.5 border border-white/10 flex-1">
+            <button
+              onClick={() => setView('today')}
+              className={`flex-1 text-[11px] py-1.5 rounded-md font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                view === 'today' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setView('timeline')}
+              className={`flex-1 text-[11px] py-1.5 rounded-md font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                view === 'timeline' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Timeline
+            </button>
+            <button
+              onClick={() => setView('archive')}
+              className={`flex-1 text-[11px] py-1.5 rounded-md font-medium transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                view === 'archive' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Archive
+            </button>
           </div>
           <select
-            id="status-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-bg-elevated border border-border rounded-lg px-2 py-1.5 text-xs text-text-secondary focus:outline-none focus:border-primary/50 cursor-pointer"
+            className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[11px] text-neutral-300 focus:outline-none focus:border-white/20 cursor-pointer"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -152,144 +148,127 @@ export default function LeftPanel() {
             <option value="completed">Done</option>
           </select>
         </div>
-
-        {/* Today Stats */}
-        {(view === 'today' || view === 'timeline') && (
-          <div className="flex items-center justify-between text-xs text-text-secondary">
-            <span>{todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''} today</span>
-            <span className="font-mono text-primary flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {formatTotalTime(totalTodayTime)}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mx-4 mt-3 px-3 py-2 bg-warning/10 border border-warning/20 rounded-lg text-warning text-xs animate-fade-in">
+        <div className="mx-4 mb-3 px-3 py-2 bg-warning/10 border border-warning/20 rounded-lg text-warning text-xs animate-fade-in">
           {error}
         </div>
       )}
 
       {/* Session List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {/* === TIMELINE VIEW === */}
-        {view === 'timeline' ? (
-          timelineSessions.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 rounded-full bg-bg-elevated border border-border flex items-center justify-center mx-auto mb-3">
-                <Timer className="w-5 h-5 text-text-muted" />
-              </div>
-              <p className="text-text-secondary text-sm">No sessions today</p>
-              <p className="text-text-muted text-xs mt-1">Start your first session</p>
-            </div>
-          ) : (
-            <div className="relative">
-              {/* Timeline connector line */}
-              <div className="absolute left-[18px] top-2 bottom-2 w-0.5 bg-border rounded-full" />
-
-              {timelineSessions.map((session, i) => {
-                const statusColor =
-                  session.status === 'active' ? 'bg-accent border-accent' :
-                  session.status === 'paused' ? 'bg-amber border-amber' :
-                  'bg-primary border-primary'
-
-                return (
-                  <div
-                    key={session.id}
-                    className="relative flex gap-3 pb-4 animate-fade-in cursor-pointer"
-                    style={{ animationDelay: `${i * 60}ms` }}
-                    onClick={() => useSessionStore.getState().setSelectedSession(session)}
-                  >
-                    {/* Timeline dot */}
-                    <div className="relative z-10 mt-1 shrink-0">
-                      <div className={`w-[10px] h-[10px] rounded-full border-2 ${statusColor}`} />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-mono text-text-muted">
-                          {formatTime(session.start_time)}
-                        </span>
-                        {session.end_time && (
-                          <>
-                            <span className="text-[10px] text-text-muted">→</span>
-                            <span className="text-[10px] font-mono text-text-muted">
-                              {formatTime(session.end_time)}
-                            </span>
-                          </>
-                        )}
-                        {session.status === 'active' && (
-                          <span className="text-[10px] text-accent font-medium flex items-center gap-0.5">
-                            <Activity className="w-2.5 h-2.5" />
-                            Live
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-medium text-text-primary truncate">
-                        {session.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-text-secondary flex items-center gap-0.5">
-                          <Clock className="w-2.5 h-2.5" />
-                          {formatDur(session.total_duration)}
-                        </span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                          session.status === 'active' ? 'status-active' :
-                          session.status === 'paused' ? 'status-paused' :
-                          'status-completed'
-                        }`}>
-                          {session.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        ) : (
-          /* === TODAY / ARCHIVE VIEW === */
-          <>
-            {/* Pinned active session */}
-            {pinnedSession && (
-              <div className="mb-3">
-                <div className="flex items-center gap-1.5 mb-1.5 px-1">
-                  <Activity className="w-3 h-3 text-accent" />
-                  <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">Active Now</span>
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2 hide-scrollbar">
+        <AnimatePresence>
+          {/* === TIMELINE VIEW === */}
+          {view === 'timeline' ? (
+            timelineSessions.length === 0 ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3">
+                  <Timer className="w-5 h-5 text-neutral-500" />
                 </div>
-                <div className="border border-accent/30 rounded-xl overflow-hidden">
-                  <SessionCard session={pinnedSession} />
-                </div>
-              </div>
-            )}
-
-            {/* Regular sessions */}
-            {unpinnedSessions.length === 0 && !pinnedSession ? (
-              <div className="text-center py-12">
-                <div className="w-12 h-12 rounded-full bg-bg-elevated border border-border flex items-center justify-center mx-auto mb-3">
-                  <Calendar className="w-5 h-5 text-text-muted" />
-                </div>
-                <p className="text-text-secondary text-sm">No sessions found</p>
-                <p className="text-text-muted text-xs mt-1">
-                  {view === 'today' ? 'Start your first session today' : 'Try adjusting your filters'}
-                </p>
-              </div>
+                <p className="text-neutral-400 text-sm">No sessions today</p>
+                <p className="text-neutral-500 text-xs mt-1">Start your first session</p>
+              </motion.div>
             ) : (
-              unpinnedSessions.map((session, i) => (
-                <div key={session.id} className="animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
-                  <SessionCard session={session} />
-                </div>
-              ))
-            )}
-          </>
-        )}
+              <div className="relative">
+                <div className="absolute left-[18px] top-2 bottom-2 w-0.5 bg-white/10 rounded-full" />
+                {timelineSessions.map((session, i) => {
+                  const statusColor =
+                    session.status === 'active' ? 'bg-accent border-accent shadow-[0_0_10px_rgba(59,130,246,0.5)]' :
+                    session.status === 'paused' ? 'bg-amber border-amber' :
+                    'bg-primary border-primary'
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      key={session.id}
+                      className="relative flex gap-3 pb-4 cursor-pointer group"
+                      onClick={() => useSessionStore.getState().setSelectedSession(session)}
+                    >
+                      {/* Timeline dot */}
+                      <div className="relative z-10 mt-1 shrink-0">
+                        <div className={`w-[10px] h-[10px] rounded-full border-2 ${statusColor}`} />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 p-3 rounded-xl border border-transparent group-hover:bg-white/5 group-hover:border-white/10 transition-all">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] font-mono text-neutral-500">
+                            {formatTime(session.start_time)}
+                          </span>
+                          {session.end_time && (
+                            <>
+                              <span className="text-[10px] text-neutral-600">→</span>
+                              <span className="text-[10px] font-mono text-neutral-500">
+                                {formatTime(session.end_time)}
+                              </span>
+                            </>
+                          )}
+                          {session.status === 'active' && (
+                            <span className="text-[10px] text-accent font-medium flex items-center gap-0.5">
+                              <Activity className="w-2.5 h-2.5" /> Live
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium text-white truncate group-hover:text-accent transition-colors">
+                          {session.title}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )
+          ) : (
+            /* === TODAY / ARCHIVE VIEW === */
+            <>
+              {/* Pinned active session */}
+              {pinnedSession && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+                  <div className="flex items-center gap-1.5 mb-2 px-1">
+                    <Activity className="w-3 h-3 text-accent" />
+                    <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">Active Now</span>
+                  </div>
+                  <motion.div animate={{ scale: [1, 1.01, 1] }} transition={{ repeat: Infinity, duration: 3 }} className="border border-accent/20 rounded-xl overflow-hidden shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                    <SessionCard session={pinnedSession} />
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {/* Regular sessions */}
+              {unpinnedSessions.length === 0 && !pinnedSession ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-3">
+                    <Calendar className="w-5 h-5 text-neutral-500" />
+                  </div>
+                  <p className="text-neutral-400 text-sm">No sessions found</p>
+                  <p className="text-neutral-500 text-xs mt-1">
+                    {view === 'today' ? 'Start your first session today' : 'Try adjusting your filters'}
+                  </p>
+                </motion.div>
+              ) : (
+                unpinnedSessions.map((session, i) => (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    transition={{ delay: i * 0.05 }}
+                    key={session.id} 
+                    className="mb-2"
+                  >
+                    <SessionCard session={session} />
+                  </motion.div>
+                ))
+              )}
+            </>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Create Modal */}
       {showCreate && <CreateSessionModal onClose={() => setShowCreate(false)} />}
-    </>
+    </aside>
   )
 }

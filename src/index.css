@@ -2,23 +2,23 @@
 
 :root {
   /* Dark Mode Palette (Default) */
-  --bg-primary: #000000;
-  --bg-surface: #0a0a0f;
-  --bg-elevated: #12121e;
-  --bg-hover: #1a1a2e;
-  --primary: #6c63ff;
-  --primary-light: #8b83ff;
-  --primary-glow: rgba(108, 99, 255, 0.2);
-  --accent: #00d4aa;
-  --accent-glow: rgba(0, 212, 170, 0.2);
-  --warning: #ff6b6b;
-  --warning-glow: rgba(255, 107, 107, 0.2);
+  --bg-primary: #020205; /* Deep black / dark navy */
+  --bg-surface: #09090f;
+  --bg-elevated: #10101a;
+  --bg-hover: #181825;
+  --primary: #8b5cf6; /* Purple */
+  --primary-light: #a78bfa;
+  --primary-glow: rgba(139, 92, 246, 0.2);
+  --accent: #3b82f6; /* Blue */
+  --accent-glow: rgba(59, 130, 246, 0.2);
+  --warning: #ef4444;
+  --warning-glow: rgba(239, 68, 68, 0.2);
   --amber: #f59e0b;
-  --text-primary: #f2f2f7;
-  --text-secondary: #9898ad;
-  --text-muted: #63637e;
-  --border: #1a1a2e;
-  --border-light: #2a2a3e;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.15);
 }
 
 .light {

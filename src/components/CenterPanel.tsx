@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useRealtimeTimer, formatDuration } from '@/hooks/useRealtimeTimer'
 import { Play, Pause, Square, Timer, Zap, Activity, MapPin, Video, FileIcon, PenLine } from 'lucide-react'
@@ -25,25 +26,37 @@ export default function CenterPanel() {
 
   if (!session) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center animate-fade-in">
-          <div className="w-24 h-24 rounded-3xl bg-bg-elevated border border-border flex items-center justify-center mx-auto mb-6">
-            <Zap className="w-10 h-10 text-text-muted" />
-          </div>
-          <h2 className="text-xl font-semibold text-text-primary mb-2">No Active Session</h2>
-          <p className="text-text-secondary text-sm max-w-xs mx-auto mb-6">
-            Create a new session or select an existing one from the left panel to get started.
+      <div className="flex-1 flex items-center justify-center p-8 relative">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-md w-full"
+        >
+          <motion.div 
+            animate={{ y: [0, -10, 0] }} 
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-black/50"
+          >
+            <Zap className="w-10 h-10 text-neutral-500" />
+          </motion.div>
+          <h2 className="text-2xl font-medium text-white mb-3 tracking-tight">Focus Awaits</h2>
+          <p className="text-neutral-400 text-sm mb-10 leading-relaxed">
+            Create a new session or select an existing one to immerse yourself in your work.
           </p>
 
           {/* Resume Last Session Suggestion */}
           {lastPausedSession && (
-            <div className="animate-slide-up">
-              <div className="inline-flex flex-col items-center gap-3 px-6 py-4 rounded-2xl bg-accent/5 border border-accent/20">
-                <p className="text-xs text-text-secondary">Resume your last session?</p>
-                <div className="flex items-center gap-3">
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-text-primary">{lastPausedSession.title}</p>
-                    <p className="text-xs text-text-muted">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="inline-flex flex-col items-center gap-4 px-8 py-6 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl">
+                <p className="text-xs text-neutral-400 uppercase tracking-widest font-semibold">Resume previous?</p>
+                <div className="flex items-center gap-5">
+                  <div className="text-left w-48">
+                    <p className="text-[15px] font-medium text-white truncate">{lastPausedSession.title}</p>
+                    <p className="text-xs text-neutral-500 mt-1">
                       Paused {(() => {
                         if (!lastPausedSession.last_paused_at) return ''
                         const diff = Date.now() - new Date(lastPausedSession.last_paused_at).getTime()
@@ -53,29 +66,32 @@ export default function CenterPanel() {
                       })()}
                     </p>
                   </div>
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.05 }}
                     onClick={() => {
                       setSelectedSession(lastPausedSession)
                       handleResumeClick(lastPausedSession)
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-xs font-medium hover:bg-accent/80 transition-all cursor-pointer shadow-lg shadow-accent/20"
+                    className="flex items-center justify-center w-12 h-12 rounded-full bg-accent text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] cursor-pointer"
                   >
-                    <Play className="w-3.5 h-3.5" />
-                    Resume
-                  </button>
+                    <Play className="w-5 h-5 ml-1" />
+                  </motion.button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Resume Packet Modal */}
-        {showResumePacket && (
-          <ResumePacketModal
-            session={showResumePacket}
-            onDismiss={() => setShowResumePacket(null)}
-          />
-        )}
+        <AnimatePresence>
+          {showResumePacket && (
+            <ResumePacketModal
+              session={showResumePacket}
+              onDismiss={() => setShowResumePacket(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     )
   }
@@ -87,115 +103,132 @@ export default function CenterPanel() {
   const rc = session.resume_context
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
-      {/* Active glow effect */}
-      {isActive && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
-        </div>
-      )}
+    <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      {/* Cinematic Ambient Glow */}
+      <AnimatePresence>
+        {isActive && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 pointer-events-none flex items-center justify-center"
+          >
+            <motion.div 
+              animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.25, 0.15] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="w-[600px] h-[600px] bg-accent/30 rounded-full blur-[120px]" 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="relative z-10 text-center animate-fade-in max-w-lg w-full">
+      <motion.div 
+        key={session.id}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="relative z-10 text-center max-w-xl w-full"
+      >
         {/* Status Badge */}
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6 ${
-          isActive ? 'status-active' : isPaused ? 'status-paused' : 'status-completed'
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-wider uppercase mb-8 shadow-sm backdrop-blur-md ${
+          isActive ? 'bg-accent/10 border border-accent/30 text-accent shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 
+          isPaused ? 'bg-amber/10 border border-amber/30 text-amber' : 
+          'bg-white/10 border border-white/20 text-white'
         }`}>
-          {isActive && <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
-          <Activity className="w-3.5 h-3.5" />
-          {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+          {isActive && <motion.div animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-2 h-2 rounded-full bg-accent" />}
+          {!isActive && <Activity className="w-3.5 h-3.5" />}
+          {session.status}
         </div>
 
         {/* Session Title */}
-        <h2 className="text-2xl font-bold text-text-primary mb-2 tracking-tight">
+        <h2 className="text-3xl font-semibold text-white mb-2 tracking-tight">
           {session.title}
         </h2>
-        <p className="text-text-secondary text-sm mb-8">
-          Started {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          {session.last_paused_at && ` · Last paused ${new Date(session.last_paused_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+        <p className="text-neutral-400 text-sm mb-10 font-mono">
+          STARTED {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {session.last_paused_at && ` · PAUSED ${new Date(session.last_paused_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
         </p>
 
-        {/* Resume Context Card — shown when session has resume position (paused only) */}
+        {/* Resume Context Card */}
         {rc && isPaused && (
-          <div className="mb-8 animate-fade-in">
-            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-accent/5 border border-accent/20 text-left max-w-sm">
-              <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                {rc.type === 'video' ? <Video className="w-4.5 h-4.5 text-accent" /> :
-                 rc.type === 'document' ? <FileIcon className="w-4.5 h-4.5 text-accent" /> :
-                 <PenLine className="w-4.5 h-4.5 text-accent" />}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+            <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl text-left shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
+                {rc.type === 'video' ? <Video className="w-5 h-5 text-accent" /> :
+                 rc.type === 'document' ? <FileIcon className="w-5 h-5 text-accent" /> :
+                 <PenLine className="w-5 h-5 text-accent" />}
               </div>
-              <div className="min-w-0">
-                <span className="text-[10px] text-accent font-semibold uppercase tracking-wider flex items-center gap-1">
-                  <MapPin className="w-2.5 h-2.5" />
-                  Resume from
+              <div className="min-w-0 pr-4">
+                <span className="text-[10px] text-accent font-bold uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                  <MapPin className="w-3 h-3" /> Resume from
                 </span>
-                <p className="text-sm text-text-primary font-medium truncate">
+                <p className="text-[15px] text-white font-medium truncate">
                   {rc.type === 'video' ? `${rc.position}` :
                    rc.type === 'document' ? `Page ${rc.position}` :
                    rc.position}
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* TIMER — Hero Element */}
-        <div className={`mb-8 ${isActive ? 'animate-timer-pulse' : ''}`}>
-          <div className={`inline-flex items-center gap-4 px-10 py-8 rounded-3xl ${
+        <motion.div 
+          layoutId="timer-hero"
+          className="mb-12"
+        >
+          <div className={`inline-flex items-center gap-6 px-12 py-10 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl transition-all duration-500 ${
             isActive
-              ? 'bg-primary/5 border-2 border-primary/30 animate-pulse-glow'
+              ? 'bg-white/[0.03] border border-white/10 shadow-[0_0_50px_rgba(59,130,246,0.1)]'
               : isPaused
-              ? 'bg-amber/5 border-2 border-amber/20'
-              : 'bg-bg-elevated border-2 border-border'
+              ? 'bg-amber/5 border border-amber/20'
+              : 'bg-white/5 border border-white/10'
           }`}>
-            <Timer className={`w-8 h-8 ${isActive ? 'text-primary' : isPaused ? 'text-amber' : 'text-text-muted'}`} />
-            <span className={`font-mono text-5xl font-bold tracking-widest ${
-              isActive ? 'text-primary' : isPaused ? 'text-amber' : 'text-text-secondary'
+            <Timer className={`w-10 h-10 ${isActive ? 'text-accent' : isPaused ? 'text-amber' : 'text-neutral-500'}`} />
+            <span className={`font-mono text-7xl font-light tracking-tight ${
+              isActive ? 'text-white' : isPaused ? 'text-amber' : 'text-neutral-500'
             }`}>
               {formatDuration(displayTime)}
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Controls */}
         {!isCompleted && (
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-5">
             {isActive ? (
               <>
-                <button
-                  id="pause-session-btn"
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowPauseCapture(true)}
-                  className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-amber/10 border border-amber/20 text-amber hover:bg-amber/20 transition-all text-sm font-medium cursor-pointer"
+                  className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-amber/10 border border-amber/20 text-amber hover:bg-amber/20 transition-all text-[15px] font-medium cursor-pointer backdrop-blur-md"
                 >
-                  <Pause className="w-4.5 h-4.5" />
-                  Pause
-                </button>
-                <button
-                  id="complete-session-btn"
+                  <Pause className="w-5 h-5" /> Pause
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => completeSession(session.id)}
-                  className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-primary hover:bg-primary-light text-white transition-all text-sm font-medium shadow-lg shadow-primary/20 cursor-pointer"
+                  className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-accent hover:bg-accent/90 text-white transition-all text-[15px] font-medium shadow-[0_0_20px_rgba(59,130,246,0.4)] cursor-pointer"
                 >
-                  <Square className="w-4 h-4" />
-                  Complete
-                </button>
+                  <Square className="w-5 h-5" /> Complete
+                </motion.button>
               </>
             ) : isPaused ? (
               <>
-                <button
-                  id="resume-session-btn"
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => handleResumeClick(session)}
-                  className="flex items-center gap-2.5 px-8 py-3 rounded-xl bg-accent/10 border border-accent/20 text-accent hover:bg-accent/20 transition-all text-sm font-medium cursor-pointer"
+                  className="flex items-center gap-3 px-10 py-4 rounded-2xl bg-accent text-white hover:bg-accent/90 transition-all text-[15px] font-medium shadow-[0_0_20px_rgba(59,130,246,0.4)] cursor-pointer"
                 >
-                  <Play className="w-4.5 h-4.5" />
-                  Resume
-                </button>
-                <button
-                  id="complete-paused-btn"
+                  <Play className="w-5 h-5 ml-1" /> Resume
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => completeSession(session.id)}
-                  className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-bg-elevated border border-border text-text-secondary hover:text-text-primary hover:border-border-light transition-all text-sm font-medium cursor-pointer"
+                  className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-neutral-300 hover:text-white hover:bg-white/10 transition-all text-[15px] font-medium cursor-pointer backdrop-blur-md"
                 >
-                  <Square className="w-4 h-4" />
-                  Complete
-                </button>
+                  <Square className="w-5 h-5" /> Complete
+                </motion.button>
               </>
             ) : null}
           </div>
@@ -203,27 +236,29 @@ export default function CenterPanel() {
 
         {/* Pause count */}
         {(session.pause_history?.length || 0) > 0 && (
-          <div className="mt-6 text-xs text-text-muted">
-            <span>{session.pause_history?.length} pause{(session.pause_history?.length ?? 0) > 1 ? 's' : ''}</span>
+          <div className="mt-8 text-xs text-neutral-500 font-mono">
+            {session.pause_history?.length} PAUSE{(session.pause_history?.length ?? 0) > 1 ? 'S' : ''}
           </div>
         )}
-      </div>
+      </motion.div>
 
-      {/* Resume Packet Modal */}
-      {showResumePacket && (
-        <ResumePacketModal
-          session={showResumePacket}
-          onDismiss={() => setShowResumePacket(null)}
-        />
-      )}
+      <AnimatePresence>
+        {showResumePacket && (
+          <ResumePacketModal
+            session={showResumePacket}
+            onDismiss={() => setShowResumePacket(null)}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Pause Capture Modal */}
-      {showPauseCapture && (
-        <PauseCaptureModal
-          session={session}
-          onDismiss={() => setShowPauseCapture(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showPauseCapture && (
+          <PauseCaptureModal
+            session={session}
+            onDismiss={() => setShowPauseCapture(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

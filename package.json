@@ -13,6 +13,7 @@
     "url": "git+https://github.com/aditya-codes-git/Aditya-NeuroStack.git"
   },
   "dependencies": {
+    "@carbon/icons-react": "^11.77.0",
     "@google/generative-ai": "^0.24.0",
     "@supabase/supabase-js": "^2.49.4",
     "lucide-react": "^0.483.0",

@@ -1,11 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
+import { motion, useMotionValue, useTransform, animate, Variants } from 'framer-motion'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useChecklistStore } from '@/stores/checklistStore'
 import { supabase } from '@/lib/supabase'
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Area, AreaChart
-} from 'recharts'
 import {
   ArrowLeft, Clock, CheckCircle, Zap, TrendingUp,
   Activity, Target, BarChart3, Brain
@@ -27,6 +24,53 @@ interface SessionWithTasks {
 
 interface Props {
   onBack: () => void
+}
+
+function CountUp({ value, suffix = '', prefix = '', decimals = 0 }: { value: number, suffix?: string, prefix?: string, decimals?: number }) {
+  const count = useMotionValue(0)
+  const formatted = useTransform(count, (latest) => {
+    const val = decimals > 0 ? latest.toFixed(decimals) : Math.round(latest)
+    return `${prefix}${val}${suffix}`
+  })
+
+  useEffect(() => {
+    const controls = animate(count, value, { duration: 1.5, ease: "easeOut" })
+    return controls.stop
+  }, [value, count])
+
+  return <motion.span>{formatted}</motion.span>
+}
+
+const formatDurationForAnimation = (seconds: number) => {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
+
+function DurationCountUp({ valueInSeconds }: { valueInSeconds: number }) {
+  const count = useMotionValue(0)
+  const display = useTransform(count, (latest) => formatDurationForAnimation(Math.round(latest)))
+
+  useEffect(() => {
+    const controls = animate(count, valueInSeconds, { duration: 1.5, ease: "easeOut" })
+    return controls.stop
+  }, [valueInSeconds, count])
+
+  return <motion.span>{display}</motion.span>
+}
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 }
 
 export default function InsightsPage({ onBack }: Props) {
@@ -106,7 +150,7 @@ export default function InsightsPage({ onBack }: Props) {
   const totalHours = totalAllTime / 3600
   const efficiency = totalHours > 0 ? totalCompleted / totalHours : 0
   const efficiencyLabel = efficiency >= 3 ? 'High' : efficiency >= 1 ? 'Medium' : 'Low'
-  const efficiencyColor = efficiency >= 3 ? 'text-accent' : efficiency >= 1 ? 'text-amber' : 'text-warning'
+  const efficiencyColor = efficiency >= 3 ? 'text-accent' : efficiency >= 1 ? 'text-amber' : 'text-neutral-400'
 
   // Most productive hour
   const productiveHour = useMemo(() => {
@@ -133,222 +177,200 @@ export default function InsightsPage({ onBack }: Props) {
     return sessions.length > 0 ? `${fmt(startH)} – ${fmt(endH)}` : 'N/A'
   }, [sessions])
 
-  // ━━━ CHART DATA ━━━
-
-  // Progress line chart: sorted by start_time
-  const progressChartData = useMemo(() => {
-    return [...sessionData]
-      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-      .map((s, i) => ({
-        name: s.title.length > 12 ? s.title.slice(0, 12) + '…' : s.title,
-        progress: s.progressPercent,
-        session: i + 1,
-      }))
-  }, [sessionData])
-
-  // Bar chart: sessions vs tasks completed
-  const barChartData = useMemo(() => {
-    return [...sessionData]
-      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-      .map(s => ({
-        name: s.title.length > 10 ? s.title.slice(0, 10) + '…' : s.title,
-        completed: s.completedTasks,
-        total: s.totalTasks,
-      }))
-  }, [sessionData])
-
-  const formatDuration = (seconds: number) => {
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    if (h > 0) return `${h}h ${m}m`
-    return `${m}m`
-  }
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-bg-elevated border border-border rounded-lg px-3 py-2 shadow-xl">
-          <p className="text-xs font-medium text-text-primary mb-1">{label}</p>
-          {payload.map((p: any, i: number) => (
-            <p key={i} className="text-xs text-text-secondary">
-              {p.name}: <span className="font-semibold text-text-primary">{p.value}{p.name === 'progress' ? '%' : ''}</span>
-            </p>
-          ))}
-        </div>
-      )
-    }
-    return null
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-fade-in">
           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-text-secondary text-sm">Loading insights...</p>
+          <p className="text-neutral-400 text-sm tracking-widest uppercase">Analyzing Context...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary relative overflow-auto">
+    <div className="min-h-screen bg-transparent relative overflow-auto hide-scrollbar">
       {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/3 rounded-full blur-[200px]" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/3 rounded-full blur-[150px]" />
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px] opacity-30" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[150px] opacity-30" />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-8">
+      <motion.div 
+        variants={containerVariants} 
+        initial="hidden" 
+        animate="visible" 
+        className="relative z-10 max-w-6xl mx-auto px-8 py-10"
+      >
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <motion.div variants={itemVariants} className="flex items-center gap-4 mb-10">
           <button
             onClick={onBack}
-            className="p-2 rounded-xl bg-bg-elevated border border-border text-text-secondary hover:text-text-primary hover:border-primary/30 transition-all cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center backdrop-blur-md cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
               <BarChart3 className="w-6 h-6 text-primary" />
               Insights
             </h1>
-            <p className="text-text-secondary text-sm mt-0.5">Your productivity at a glance</p>
+            <p className="text-neutral-500 text-sm mt-0.5 tracking-wide">Your deep work analytics</p>
           </div>
-        </div>
+        </motion.div>
 
         {/* ━━━ TOP SUMMARY CARDS ━━━ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {/* Total Focus Today */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-accent" />
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                <Clock className="w-5 h-5 text-accent" />
               </div>
-              <span className="text-xs text-text-secondary font-medium">Today</span>
+              <span className="text-[13px] text-neutral-400 font-medium uppercase tracking-wider">Today</span>
             </div>
-            <p className="text-2xl font-bold text-text-primary">{formatDuration(totalToday)}</p>
-            <p className="text-[11px] text-text-muted mt-1">All time: {formatDuration(totalAllTime)}</p>
-          </div>
+            <p className="text-3xl font-bold text-white tracking-tight relative z-10">
+              <DurationCountUp valueInSeconds={totalToday} />
+            </p>
+            <p className="text-[12px] text-neutral-500 mt-2 relative z-10">
+              All time: {formatDurationForAnimation(totalAllTime)}
+            </p>
+          </motion.div>
 
           {/* Completion Rate */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Target className="w-4 h-4 text-primary" />
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                <Target className="w-5 h-5 text-primary" />
               </div>
-              <span className="text-xs text-text-secondary font-medium">Completion</span>
+              <span className="text-[13px] text-neutral-400 font-medium uppercase tracking-wider">Completion</span>
             </div>
-            <p className="text-2xl font-bold text-text-primary">{completionRate}%</p>
-            <p className="text-[11px] text-text-muted mt-1">{totalCompleted}/{totalTasks} tasks done</p>
-          </div>
+            <p className="text-3xl font-bold text-white tracking-tight relative z-10">
+              <CountUp value={completionRate} suffix="%" />
+            </p>
+            <p className="text-[12px] text-neutral-500 mt-2 relative z-10">
+              {totalCompleted} / {totalTasks} tasks done
+            </p>
+          </motion.div>
 
           {/* Total Sessions */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-amber/10 flex items-center justify-center">
-                <Activity className="w-4 h-4 text-amber" />
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center">
+                <Activity className="w-5 h-5 text-amber" />
               </div>
-              <span className="text-xs text-text-secondary font-medium">Sessions</span>
+              <span className="text-[13px] text-neutral-400 font-medium uppercase tracking-wider">Sessions</span>
             </div>
-            <p className="text-2xl font-bold text-text-primary">{totalSessions}</p>
-            <p className="text-[11px] text-text-muted mt-1">
+            <p className="text-3xl font-bold text-white tracking-tight relative z-10">
+              <CountUp value={totalSessions} />
+            </p>
+            <p className="text-[12px] text-neutral-500 mt-2 relative z-10">
               {sessions.filter(s => s.status === 'completed').length} completed
             </p>
-          </div>
+          </motion.div>
 
           {/* Efficiency */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-primary" />
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-primary" />
               </div>
-              <span className="text-xs text-text-secondary font-medium">Efficiency</span>
+              <span className="text-[13px] text-neutral-400 font-medium uppercase tracking-wider">Efficiency</span>
             </div>
-            <p className={`text-2xl font-bold ${efficiencyColor}`}>{efficiencyLabel}</p>
-            <p className="text-[11px] text-text-muted mt-1">{efficiency.toFixed(1)} tasks/hr</p>
-          </div>
+            <p className={`text-3xl font-bold tracking-tight ${efficiencyColor} relative z-10`}>
+              {efficiencyLabel}
+            </p>
+            <p className="text-[12px] text-neutral-500 mt-2 relative z-10">
+              <CountUp value={efficiency} decimals={1} suffix=" tasks/hr" />
+            </p>
+          </motion.div>
         </div>
 
         {/* ━━━ MIDDLE: CHARTS ━━━ */}
-        <div className="mb-8">
+        <motion.div variants={itemVariants} className="mb-10 bg-white/5 backdrop-blur-3xl rounded-2xl border border-white/10 p-6 shadow-xl">
           <ProductivityGraph sessions={sessionData} />
-        </div>
+        </motion.div>
 
         {/* ━━━ BOTTOM: ADDITIONAL INSIGHTS ━━━ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Productivity Insight */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Brain className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold text-text-primary">Peak Hours</h3>
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 hover:bg-white/[0.07] transition-all relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-3 mb-4 relative z-10">
+              <Brain className="w-5 h-5 text-primary" />
+              <h3 className="text-[13px] font-semibold text-white uppercase tracking-wider text-primary">Peak Hours</h3>
             </div>
-            <p className="text-sm text-text-secondary mb-2">
+            <p className="text-[13px] text-neutral-400 mb-2 relative z-10">
               You're most productive between:
             </p>
-            <p className="text-lg font-bold text-primary">{productiveHour}</p>
-            <p className="text-[11px] text-text-muted mt-2">
+            <p className="text-xl font-bold text-primary tracking-wide relative z-10">{productiveHour}</p>
+            <p className="text-[11px] text-neutral-500 mt-3 uppercase tracking-wider mt-4 relative z-10">
               Based on {totalSessions} session{totalSessions !== 1 ? 's' : ''}
             </p>
-          </div>
+          </motion.div>
 
           {/* Session Breakdown */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Activity className="w-4 h-4 text-accent" />
-              <h3 className="text-sm font-semibold text-text-primary">Session Status</h3>
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 hover:bg-white/[0.07] transition-all">
+            <div className="flex items-center gap-3 mb-6">
+              <Activity className="w-5 h-5 text-accent" />
+              <h3 className="text-[13px] font-semibold text-accent uppercase tracking-wider">Session Status</h3>
             </div>
-            <div className="space-y-2.5">
-              {(['active', 'paused', 'completed'] as const).map(status => {
+            <div className="space-y-5">
+              {(['active', 'paused', 'completed'] as const).map((status, idx) => {
                 const count = sessions.filter(s => s.status === status).length
                 const pct = totalSessions > 0 ? Math.round((count / totalSessions) * 100) : 0
-                const color = status === 'active' ? 'bg-accent' : status === 'paused' ? 'bg-amber' : 'bg-primary'
+                const color = status === 'active' ? 'bg-accent shadow-[0_0_10px_rgba(59,130,246,0.5)]' : status === 'paused' ? 'bg-amber shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-primary shadow-[0_0_10px_rgba(139,92,246,0.5)]'
                 return (
                   <div key={status}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-text-secondary capitalize">{status}</span>
-                      <span className="text-xs font-medium text-text-primary">{count} ({pct}%)</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[12px] text-neutral-400 capitalize font-medium">{status}</span>
+                      <span className="text-[12px] font-bold text-white flex gap-[3px]">
+                        <CountUp value={count} /> (<CountUp value={pct} suffix="%" />)
+                      </span>
                     </div>
-                    <div className="h-1.5 bg-bg-elevated rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${color} rounded-full transition-all duration-500`}
-                        style={{ width: `${pct}%` }}
+                    <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 1.5, delay: 0.2 + (idx * 0.1), ease: "easeOut" }}
+                        className={`h-full ${color} rounded-full`}
                       />
                     </div>
                   </div>
                 )
               })}
             </div>
-          </div>
+          </motion.div>
 
           {/* Average Session */}
-          <div className="glass rounded-2xl p-5 border border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-amber" />
-              <h3 className="text-sm font-semibold text-text-primary">Averages</h3>
+          <motion.div variants={itemVariants} className="bg-white/5 backdrop-blur-3xl rounded-2xl p-6 border border-white/10 hover:bg-white/[0.07] transition-all relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-3 mb-5 relative z-10">
+              <Clock className="w-5 h-5 text-amber" />
+              <h3 className="text-[13px] font-semibold text-amber uppercase tracking-wider">Averages</h3>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4 relative z-10 flex flex-col justify-center h-[calc(100%-40px)]">
               <div>
-                <p className="text-xs text-text-secondary">Avg session duration</p>
-                <p className="text-lg font-bold text-text-primary">
-                  {totalSessions > 0 ? formatDuration(Math.round(totalAllTime / totalSessions)) : '—'}
+                <p className="text-[12px] text-neutral-400 mb-1">Avg session duration</p>
+                <p className="text-xl font-bold text-white">
+                  {totalSessions > 0 ? formatDurationForAnimation(Math.round(totalAllTime / totalSessions)) : '—'}
                 </p>
               </div>
+              <div className="h-px w-full bg-white/5 my-2" />
               <div>
-                <p className="text-xs text-text-secondary">Avg tasks per session</p>
-                <p className="text-lg font-bold text-text-primary">
-                  {totalSessions > 0 ? (totalTasks / totalSessions).toFixed(1) : '—'}
+                <p className="text-[12px] text-neutral-400 mb-1">Avg tasks per session</p>
+                <p className="text-xl font-bold text-white">
+                  {totalSessions > 0 ? <CountUp value={totalTasks / totalSessions} decimals={1} /> : '—'}
                 </p>
               </div>
-              <div>
-                <p className="text-xs text-text-secondary">Avg completion rate</p>
-                <p className="text-lg font-bold text-text-primary">{completionRate}%</p>
-              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       <Footer />
     </div>

@@ -1,9 +1,14 @@
 import { useAuthStore } from '@/stores/authStore'
 import { useSessionStore } from '@/stores/sessionStore'
 import { useRealtimeTimer, formatDuration } from '@/hooks/useRealtimeTimer'
-import { Zap, Timer, LogOut, User } from 'lucide-react'
+import { Zap, Timer, LogOut, User, BarChart3 } from 'lucide-react'
 
-export default function Header() {
+interface Props {
+  onInsightsClick?: () => void
+  showingInsights?: boolean
+}
+
+export default function Header({ onInsightsClick, showingInsights }: Props) {
   const { user, signOut } = useAuthStore()
   const { activeSession } = useSessionStore()
   const elapsed = useRealtimeTimer(activeSession)
@@ -34,8 +39,21 @@ export default function Header() {
         </div>
       )}
 
-      {/* User Menu */}
+      {/* Nav + User Menu */}
       <div className="flex items-center gap-3">
+        {/* Insights Button */}
+        <button
+          onClick={onInsightsClick}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            showingInsights
+              ? 'bg-primary/10 text-primary border border-primary/30'
+              : 'bg-bg-elevated border border-border text-text-secondary hover:text-primary hover:border-primary/30'
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          Insights
+        </button>
+
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg-elevated border border-border">
           <User className="w-3.5 h-3.5 text-text-secondary" />
           <span className="text-xs text-text-secondary max-w-32 truncate">

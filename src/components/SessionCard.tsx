@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSessionStore } from '@/stores/sessionStore'
-import { formatDurationShort } from '@/hooks/useRealtimeTimer'
+import { useRealtimeTimer, formatDurationShort } from '@/hooks/useRealtimeTimer'
+import PauseCaptureModal from './PauseCaptureModal'
 import type { Session } from '@/types/database'
 import { Play, Pause, CheckCircle, Clock, Trash2, X } from 'lucide-react'
 
@@ -11,8 +12,10 @@ interface Props {
 export default function SessionCard({ session }: Props) {
   const { setSelectedSession, selectedSession, pauseSession, deleteSession } = useSessionStore()
   const isSelected = selectedSession?.id === session.id
+  const elapsed = useRealtimeTimer(session)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showPauseModal, setShowPauseModal] = useState(false)
 
   const statusConfig = {
     active: { class: 'status-active', icon: Play, label: 'Active' },
@@ -26,7 +29,7 @@ export default function SessionCard({ session }: Props) {
   const handleQuickAction = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (session.status === 'active') {
-      await pauseSession(session.id)
+      setShowPauseModal(true)
     } else if (session.status === 'paused') {
       setSelectedSession(session)
     }
@@ -108,7 +111,7 @@ export default function SessionCard({ session }: Props) {
         <div className="flex items-center gap-3 text-xs text-text-secondary">
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            {formatDurationShort(session.total_duration)}
+            {formatDurationShort(elapsed)}
           </span>
           <span>{timeAgo()}</span>
         </div>
@@ -143,6 +146,13 @@ export default function SessionCard({ session }: Props) {
           </button>
         </div>
       </div>
+
+      {showPauseModal && (
+        <PauseCaptureModal
+          session={session}
+          onDismiss={() => setShowPauseModal(false)}
+        />
+      )}
     </div>
   )
 }

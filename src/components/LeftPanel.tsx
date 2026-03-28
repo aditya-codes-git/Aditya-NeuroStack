@@ -58,7 +58,10 @@ export default function LeftPanel() {
   const formatTotalTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
     const m = Math.floor((seconds % 3600) / 60)
-    return h > 0 ? `${h}h ${m}m` : `${m}m`
+    const s = seconds % 60
+    if (h > 0) return `${h}h ${m}m ${s}s`
+    if (m > 0) return `${m}m ${s}s`
+    return `${s}s`
   }
 
   const formatTime = (iso: string) => {
@@ -68,8 +71,10 @@ export default function LeftPanel() {
   const formatDur = (seconds: number) => {
     const h = Math.floor(seconds / 3600)
     const m = Math.floor((seconds % 3600) / 60)
-    if (h > 0) return `${h}h ${m}m`
-    return `${m}m`
+    const s = seconds % 60
+    if (h > 0) return `${h}h ${m}m ${s}s`
+    if (m > 0) return `${m}m ${s}s`
+    return `${s}s`
   }
 
   return (

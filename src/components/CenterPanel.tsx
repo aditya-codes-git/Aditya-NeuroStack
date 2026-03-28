@@ -3,13 +3,15 @@ import { useSessionStore } from '@/stores/sessionStore'
 import { useRealtimeTimer, formatDuration } from '@/hooks/useRealtimeTimer'
 import { Play, Pause, Square, Timer, Zap, Activity, MapPin, Video, FileIcon, PenLine } from 'lucide-react'
 import ResumePacketModal from './ResumePacketModal'
+import PauseCaptureModal from './PauseCaptureModal'
 import type { Session } from '@/types/database'
 
 export default function CenterPanel() {
-  const { activeSession, selectedSession, sessions, pauseSession, resumeSession, completeSession, setSelectedSession } = useSessionStore()
+  const { activeSession, selectedSession, sessions, completeSession, setSelectedSession, pauseSession } = useSessionStore()
   const session = activeSession || selectedSession
   const elapsed = useRealtimeTimer(activeSession)
   const [showResumePacket, setShowResumePacket] = useState<Session | null>(null)
+  const [showPauseCapture, setShowPauseCapture] = useState(false)
 
   // Find last paused session for "Resume last session?" suggestion
   const lastPausedSession = !activeSession
@@ -161,7 +163,7 @@ export default function CenterPanel() {
               <>
                 <button
                   id="pause-session-btn"
-                  onClick={() => pauseSession(session.id)}
+                  onClick={() => setShowPauseCapture(true)}
                   className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-amber/10 border border-amber/20 text-amber hover:bg-amber/20 transition-all text-sm font-medium cursor-pointer"
                 >
                   <Pause className="w-4.5 h-4.5" />
@@ -212,6 +214,14 @@ export default function CenterPanel() {
         <ResumePacketModal
           session={showResumePacket}
           onDismiss={() => setShowResumePacket(null)}
+        />
+      )}
+
+      {/* Pause Capture Modal */}
+      {showPauseCapture && (
+        <PauseCaptureModal
+          session={session}
+          onDismiss={() => setShowPauseCapture(false)}
         />
       )}
     </div>

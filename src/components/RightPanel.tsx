@@ -6,15 +6,14 @@ import { useRealtimeTimer, formatDuration, formatDurationShort } from '@/hooks/u
 import { generateSummary, generateTaskSuggestions, generateResumeContext } from '@/lib/groq'
 import type { ResumeContext } from '@/types/database'
 import {
-  Brain, MapPin, CheckSquare, Link2, Clock, ExternalLink,
+  Brain, CheckSquare, Link2, Clock, ExternalLink,
   Plus, X, Trash2, Sparkles, Loader2, ChevronDown, ChevronUp,
-  FileText, Play, Video, FileIcon, PenLine, Timer
+  Play, Timer, Activity
 } from 'lucide-react'
 
 export default function RightPanel() {
-  const { selectedSession, activeSession, updateNotes, updateLinks, updateResumeContext } = useSessionStore()
+  const { selectedSession, activeSession, updateNotes, updateLinks } = useSessionStore()
   const { items, fetchItems, addItem, toggleItem, deleteItem, clearItems } = useChecklistStore()
-  const { summaries, loading: videoLoading, error: videoError, cooldown: videoCooldown, getSummary, fetchCachedSummary, clearError: clearVideoError } = useVideoSummaryStore()
   const session = selectedSession || activeSession
   const elapsed = useRealtimeTimer(activeSession)
 
@@ -24,32 +23,12 @@ export default function RightPanel() {
   const [aiResult, setAiResult] = useState<string>('')
   const [showAi, setShowAi] = useState(false)
 
-  // Resume context editor state
-  const [rcType, setRcType] = useState<ResumeContext['type']>('manual')
-  const [rcLink, setRcLink] = useState('')
-  const [rcPosition, setRcPosition] = useState('')
-  const [showRcEditor, setShowRcEditor] = useState(false)
-
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Fetch checklist when session changes
   useEffect(() => {
     if (session) {
       fetchItems(session.id)
-      // Populate resume context editor from session data
-      if (session.resume_context) {
-        setRcType(session.resume_context.type)
-        setRcLink(session.resume_context.link || '')
-        setRcPosition(session.resume_context.position)
-        // Auto-fetch cached video summary (DB only, no API call)
-        if (session.resume_context.type === 'video' && session.resume_context.link) {
-          fetchCachedSummary(session.resume_context.link)
-        }
-      } else {
-        setRcType('manual')
-        setRcLink('')
-        setRcPosition('')
-      }
     } else {
       clearItems()
     }
@@ -84,46 +63,6 @@ export default function RightPanel() {
     if (!session) return
     const updatedLinks = (session.links || []).filter(l => l !== link)
     await updateLinks(session.id, updatedLinks)
-  }
-
-  const handleSaveResumeContext = async () => {
-    if (!session || !rcPosition.trim()) return
-    const ctx: ResumeContext = {
-      type: rcType,
-      position: rcPosition.trim(),
-      ...(rcLink.trim() ? { link: rcLink.trim() } : {}),
-    }
-    await updateResumeContext(session.id, ctx)
-    setShowRcEditor(false)
-  }
-
-  const handleClearResumeContext = async () => {
-    if (!session) return
-    await updateResumeContext(session.id, null)
-    setRcType('manual')
-    setRcLink('')
-    setRcPosition('')
-  }
-
-  // Build resume link for video with timestamp
-  const buildResumeLink = (ctx: ResumeContext): string | null => {
-    if (!ctx.link) return null
-    if (ctx.type === 'video' && ctx.position) {
-      // Convert mm:ss or hh:mm:ss to seconds
-      const parts = ctx.position.split(':').map(Number)
-      let seconds = 0
-      if (parts.length === 3) seconds = parts[0] * 3600 + parts[1] * 60 + parts[2]
-      else if (parts.length === 2) seconds = parts[0] * 60 + parts[1]
-      else seconds = parts[0] || 0
-
-      if (ctx.link.includes('youtube.com') || ctx.link.includes('youtu.be')) {
-        const url = new URL(ctx.link)
-        url.searchParams.set('t', `${seconds}s`)
-        return url.toString()
-      }
-      return ctx.link
-    }
-    return ctx.link
   }
 
   // AI handlers
@@ -165,13 +104,13 @@ export default function RightPanel() {
 
   if (!session) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-6 bg-bg-primary">
         <div className="text-center">
           <div className="w-16 h-16 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center mx-auto mb-4">
             <Brain className="w-7 h-7 text-text-muted" />
           </div>
-          <p className="text-text-secondary text-sm font-medium">Resume Packet</p>
-          <p className="text-text-muted text-xs mt-1">Select a session to view context</p>
+          <p className="text-text-secondary text-sm font-medium">Session Details</p>
+          <p className="text-text-muted text-xs mt-1">Select a session to view details</p>
         </div>
       </div>
     )
@@ -179,10 +118,8 @@ export default function RightPanel() {
 
   const pendingItems = items.filter(i => !i.completed)
   const completedCount = items.filter(i => i.completed).length
-  const isPaused = session.status === 'paused'
   const isActive = session.status === 'active'
   const displayTime = isActive ? elapsed : session.total_duration
-  const rc = session.resume_context
 
   // Relative time since last paused
   const relativeTime = (dateStr: string) => {
@@ -195,21 +132,13 @@ export default function RightPanel() {
     return `${Math.floor(hrs / 24)}d ago`
   }
 
-  const resumeLinkIcon = (type: ResumeContext['type']) => {
-    switch (type) {
-      case 'video': return <Video className="w-4 h-4" />
-      case 'document': return <FileIcon className="w-4 h-4" />
-      case 'manual': return <PenLine className="w-4 h-4" />
-    }
-  }
-
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden bg-bg-primary">
       {/* Panel Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border bg-bg-primary">
         <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-          <Brain className="w-4 h-4 text-primary" />
-          Resume Packet
+          {isActive ? <Activity className="w-4 h-4 text-accent" /> : <Brain className="w-4 h-4 text-primary" />}
+          Session Details
         </h2>
         <p className="text-xs text-text-secondary mt-1 truncate">{session.title}</p>
       </div>
@@ -221,214 +150,22 @@ export default function RightPanel() {
           <div className="px-3.5 py-2.5 border-b border-border bg-primary/5">
             <h3 className="text-xs font-semibold text-primary flex items-center gap-1.5">
               <Brain className="w-3.5 h-3.5" />
-              You were working on:
+              You are working on:
             </h3>
           </div>
           <div className="p-3.5">
-            {session.notes ? (
-              <p className="text-sm text-text-primary leading-relaxed line-clamp-3">
-                {session.notes.split('\n').slice(0, 2).join('\n')}
-              </p>
-            ) : (
-              <p className="text-xs text-text-muted italic">No notes yet</p>
-            )}
             {/* Editable Notes */}
             <textarea
               id="session-notes-editor"
               value={session.notes || ''}
               onChange={(e) => handleNotesChange(e.target.value)}
               placeholder="Add notes about your progress..."
-              rows={3}
-              className="w-full mt-2.5 bg-bg-primary border border-border rounded-lg py-2 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all resize-none leading-relaxed"
+              rows={4}
+              className="w-full bg-bg-primary border border-border rounded-lg py-2 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all resize-none leading-relaxed"
             />
             <div className="flex items-center mt-1">
               <span className="text-[10px] text-text-muted">Auto-saves every 2s</span>
             </div>
-          </div>
-        </div>
-
-        {/* ━━━━━ 📍 WHERE — Resume Position ━━━━━ */}
-        <div className="rounded-xl bg-bg-elevated border border-border overflow-hidden">
-          <div className="px-3.5 py-2.5 border-b border-border bg-accent/5">
-            <h3 className="text-xs font-semibold text-accent flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              Resume from:
-            </h3>
-          </div>
-          <div className="p-3.5">
-            {rc ? (
-              <div className="space-y-2">
-                {/* Resume position display */}
-                <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-accent/5 border border-accent/15">
-                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                    {resumeLinkIcon(rc.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-accent/70 block">
-                      {rc.type === 'video' ? '▶ Video' : rc.type === 'document' ? '📄 Document' : '✏️ Manual'}
-                    </span>
-                    <p className="text-sm font-medium text-text-primary truncate">
-                      {rc.type === 'video' ? `Timestamp: ${rc.position}` :
-                       rc.type === 'document' ? `Page ${rc.position}` :
-                       rc.position}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Clickable resume link */}
-                {rc.link && (
-                  <a
-                    href={buildResumeLink(rc) || rc.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all text-xs font-medium"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">
-                      {rc.type === 'video' ? `Open video at ${rc.position}` :
-                       rc.type === 'document' ? `Open document (${rc.position})` :
-                       'Open link'}
-                    </span>
-                  </a>
-                )}
-
-                {/* 🎬 Video Summary — Generate / Display */}
-                {rc.type === 'video' && rc.link && (
-                  <div className="mt-2 space-y-2">
-                    {summaries[rc.link] ? (
-                      <div className="rounded-lg bg-primary/5 border border-primary/15 p-3 animate-fade-in">
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <Sparkles className="w-3 h-3 text-primary" />
-                          <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Video Summary</span>
-                        </div>
-                        <p className="text-xs text-text-primary leading-relaxed whitespace-pre-wrap">
-                          {summaries[rc.link]}
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => getSummary(rc.link!)}
-                          disabled={!!videoLoading || videoCooldown}
-                          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all text-xs font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {videoLoading === rc.link ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              Generating summary...
-                            </>
-                          ) : videoCooldown ? (
-                            <>
-                              <Clock className="w-3 h-3" />
-                              Cooldown — try again shortly
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-3 h-3" />
-                              ✨ Generate Summary
-                            </>
-                          )}
-                        </button>
-                        {videoError && (
-                          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/20 text-warning text-[11px] animate-fade-in">
-                            <span>⚠️ {videoError}</span>
-                            <button onClick={clearVideoError} className="shrink-0 hover:text-text-primary cursor-pointer">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowRcEditor(true)}
-                    className="text-[10px] text-text-muted hover:text-primary transition-colors cursor-pointer"
-                  >
-                    Edit position
-                  </button>
-                  <button
-                    onClick={handleClearResumeContext}
-                    className="text-[10px] text-text-muted hover:text-warning transition-colors cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <button
-                  onClick={() => setShowRcEditor(!showRcEditor)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-border hover:border-accent/40 text-text-muted hover:text-accent text-xs transition-all cursor-pointer"
-                >
-                  <MapPin className="w-3.5 h-3.5" />
-                  Where did you stop?
-                </button>
-              </div>
-            )}
-
-            {/* Resume Context Editor */}
-            {showRcEditor && (
-              <div className="mt-3 space-y-2.5 p-3 rounded-lg bg-bg-primary border border-border animate-fade-in">
-                {/* Type selector */}
-                <div className="flex rounded-lg bg-bg-elevated p-0.5 border border-border">
-                  {(['video', 'document', 'manual'] as const).map(type => (
-                    <button
-                      key={type}
-                      onClick={() => setRcType(type)}
-                      className={`flex-1 text-[10px] py-1.5 rounded-md font-medium transition-all cursor-pointer capitalize flex items-center justify-center gap-1 ${
-                        rcType === type ? 'bg-accent text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                    >
-                      {type === 'video' ? <Video className="w-2.5 h-2.5" /> : type === 'document' ? <FileIcon className="w-2.5 h-2.5" /> : <PenLine className="w-2.5 h-2.5" />}
-                      {type}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Link input (for video/document) */}
-                {rcType !== 'manual' && (
-                  <input
-                    type="url"
-                    value={rcLink}
-                    onChange={(e) => setRcLink(e.target.value)}
-                    placeholder={rcType === 'video' ? 'YouTube / video URL' : 'Document URL'}
-                    className="w-full bg-bg-elevated border border-border rounded-lg py-1.5 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 transition-all"
-                  />
-                )}
-
-                {/* Position input */}
-                <input
-                  type="text"
-                  value={rcPosition}
-                  onChange={(e) => setRcPosition(e.target.value)}
-                  placeholder={
-                    rcType === 'video' ? 'Timestamp (e.g. 12:34)' :
-                    rcType === 'document' ? 'Page number (e.g. 18)' :
-                    'Where did you stop? (e.g. Fixing login bug)'
-                  }
-                  className="w-full bg-bg-elevated border border-border rounded-lg py-1.5 px-2.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 transition-all"
-                />
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowRcEditor(false)}
-                    className="flex-1 py-1.5 rounded-lg border border-border text-text-secondary text-xs cursor-pointer hover:bg-bg-hover transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveResumeContext}
-                    disabled={!rcPosition.trim()}
-                    className="flex-1 py-1.5 rounded-lg bg-accent text-white text-xs font-medium cursor-pointer disabled:opacity-40 hover:bg-accent/80 transition-all"
-                  >
-                    Save Position
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -437,7 +174,7 @@ export default function RightPanel() {
           <div className="px-3.5 py-2.5 border-b border-border bg-amber/5">
             <h3 className="text-xs font-semibold text-amber flex items-center gap-1.5">
               <CheckSquare className="w-3.5 h-3.5" />
-              Next steps
+              Checklist
               {items.length > 0 && (
                 <span className="ml-auto text-[10px] font-normal text-text-muted">
                   {pendingItems.length}/{items.length} pending
@@ -496,7 +233,7 @@ export default function RightPanel() {
             )}
 
             {items.length === 0 && (
-              <p className="text-xs text-text-muted italic">No tasks yet</p>
+              <p className="text-xs text-text-muted italic mb-2">No tasks yet</p>
             )}
 
             {/* Add task */}

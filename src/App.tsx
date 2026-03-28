@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import AuthPage from '@/pages/AuthPage'
 import Dashboard from '@/pages/Dashboard'
+import LandingPage from '@/pages/LandingPage'
 
 function ThemeManager() {
   const { theme } = useThemeStore()
@@ -65,11 +66,15 @@ export default function App() {
       <ThemeManager />
       <Routes>
         <Route
-          path="/auth"
-          element={user ? <Navigate to="/" replace /> : <AuthPage />}
+          path="/"
+          element={<LandingPage />}
         />
         <Route
-          path="/"
+          path="/auth"
+          element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />}
+        />
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSessionStore } from '@/stores/sessionStore'
+import { useAuthStore } from '@/stores/authStore'
 import { IconNavigation, DetailSidebar } from '@/components/ui/sidebar-component'
 import LeftPanel from '@/components/LeftPanel'
 import CenterPanel from '@/components/CenterPanel'
@@ -9,6 +10,7 @@ import InsightsPage from '@/pages/InsightsPage'
 
 export default function Dashboard() {
   const { fetchSessions, setupRealtime } = useSessionStore()
+  const { signOut } = useAuthStore()
   const [activeSection, setActiveSection] = useState('dashboard')
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function Dashboard() {
           onSectionChange={setActiveSection}
           onSettingsClick={() => setActiveSection('settings')}
           onAccountClick={() => setActiveSection('account')}
+          onLogoutClick={signOut}
         />
       </div>
 

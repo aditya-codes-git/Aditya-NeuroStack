@@ -32,6 +32,7 @@ import {
   Security,
   Notification,
   Integration,
+  Logout,
 } from "@carbon/icons-react";
 
 /** ======================= Local SVG paths (inline) ======================= */
@@ -210,12 +211,14 @@ export function IconNavigation({
   activeSection,
   onSectionChange,
   onSettingsClick,
-  onAccountClick
+  onAccountClick,
+  onLogoutClick,
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onSettingsClick?: () => void;
   onAccountClick?: () => void;
+  onLogoutClick?: () => void;
 }) {
   const navigate = useNavigate();
   const navItems = [
@@ -264,6 +267,12 @@ export function IconNavigation({
         >
           <AvatarCircle />
         </button>
+        <IconNavButton 
+          onClick={onLogoutClick} 
+          title="Logout"
+        >
+          <Logout size={18} />
+        </IconNavButton>
       </div>
     </aside>
   );
